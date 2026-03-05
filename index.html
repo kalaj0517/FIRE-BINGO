@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KIN BINGO — March Madness 2025</title>
+
+  <!-- Kin Brand Tokens -->
+  <link rel="stylesheet" href="https://brand.kin.insure/tokens.css">
+
+  <!-- March Madness fonts: bold + sporty -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
+  <style>
+    /* ─── DESIGN TOKENS ────────────────────────────── */
+    :root {
+      --yellow:      #F5C200;
+      --yellow-glow: rgba(245,194,0,0.35);
+      --orange:      #E87722;
+      --orange-dim:  rgba(232,119,34,0.18);
+      --navy:        #08111F;
+      --navy-mid:    #0F1E30;
+      --navy-card:   #152A42;
+      --navy-light:  #1E3A57;
+      --green:       #22C55E;
+      --green-dim:   rgba(34,197,94,0.15);
+      --red:         #EF4444;
+      --red-dim:     rgba(239,68,68,0.15);
+      --muted:       #6B8BAD;
+      --white:       #FFFFFF;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--navy);
+      color: var(--white);
+      font-family: 'Barlow Condensed', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Basketball court lines as ambient background */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background:
+        radial-gradient(ellipse 60% 40% at 50% 100%, rgba(232,119,34,0.06) 0%, transparent 70%),
+        repeating-linear-gradient(0deg, transparent, transparent 79px, rgba(255,255,255,0.025) 79px, rgba(255,255,255,0.025) 80px),
+        repeating-linear-gradient(90deg, transparent, transparent 79px, rgba(255,255,255,0.025) 79px, rgba(255,255,255,0.025) 80px);
+    }
+
+    /* Decorative arc — like a center court circle */
+    body::after {
+      content: '';
+      position: fixed; bottom: -300px; left: 50%; z-index: 0;
+      transform: translateX(-50%);
+      width: 700px; height: 700px;
+      border: 2px solid rgba(245,194,0,0.06);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .screen { display: none; position: relative; z-index: 1; min-height: 100vh; }
+    .screen.active { display: block; }
+
+    /* ─── TYPOGRAPHY ────────────────────────────────── */
+    .display    { font-family: 'Anton', sans-serif; letter-spacing: 0.02em; }
+    .mono-label { font-size: 0.7rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+
+    /* ─── COMPONENTS ─────────────────────────────────── */
+    .card {
+      background: var(--navy-card);
+      border: 1px solid rgba(245,194,0,0.12);
+      border-radius: 16px;
+      padding: 1.4rem;
+    }
+
+    .btn {
+      border: none; border-radius: 8px; cursor: pointer;
+      font-family: 'Anton', sans-serif; letter-spacing: 0.05em;
+      text-transform: uppercase; transition: all .15s; outline: none;
+    }
+    .btn:disabled { opacity: .35; cursor: not-allowed; transform: none !important; }
+
+    .btn-yellow { background: var(--yellow); color: var(--navy); }
+    .btn-yellow:hover:not(:disabled) { background: #FFD740; transform: translateY(-2px); box-shadow: 0 6px 22px var(--yellow-glow); }
+
+    .btn-ghost { background: transparent; color: var(--white); border: 1px solid rgba(255,255,255,0.18); }
+    .btn-ghost:hover:not(:disabled) { border-color: var(--yellow); color: var(--yellow); }
+
+    .btn-green { background: var(--green); color: #fff; }
+    .btn-green:hover:not(:disabled) { background: #16A34A; transform: translateY(-2px); }
+
+    .btn-red { background: var(--red); color: #fff; }
+    .btn-red:hover:not(:disabled) { background: #DC2626; transform: translateY(-2px); }
+
+    .btn-lg { font-size: 1.1rem; padding: .85rem 2rem; }
+    .btn-sm { font-size: .78rem; padding: .35rem .75rem; border-radius: 6px; }
+
+    /* ─── HEADER ─────────────────────────────────────── */
+    .app-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: .9rem 1.5rem;
+      background: rgba(8,17,31,0.85);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(245,194,0,0.14);
+      position: sticky; top: 0; z-index: 50;
+    }
+
+    .logo-text {
+      font-family: 'Anton', sans-serif; font-size: 1.3rem;
+      color: var(--yellow); letter-spacing: 0.08em;
+    }
+    .logo-text span { color: var(--orange); }
+
+    /* ─── LANDING ─────────────────────────────────────── */
+    #landing {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      min-height: 100vh; padding: 2rem; text-align: center;
+    }
+
+    .bracket-badge {
+      display: inline-flex; align-items: center; gap: .5rem;
+      background: var(--orange); color: #fff;
+      font-family: 'Anton', sans-serif; font-size: .7rem; letter-spacing: .2em;
+      padding: .3rem 1rem; border-radius: 100px;
+      margin-bottom: 1.25rem; text-transform: uppercase;
+    }
+
+    .big-title {
+      font-family: 'Anton', sans-serif;
+      font-size: clamp(4rem, 12vw, 8rem);
+      line-height: .88;
+      color: var(--yellow);
+      text-shadow: 5px 5px 0 rgba(0,0,0,.35);
+      margin-bottom: .4rem;
+    }
+
+    .march-sub {
+      font-family: 'Anton', sans-serif;
+      font-size: clamp(1rem, 3vw, 1.6rem);
+      letter-spacing: .22em;
+      color: rgba(255,255,255,.75);
+      margin-bottom: 2.5rem;
+    }
+
+    .landing-form {
+      max-width: 420px; width: 100%;
+      background: var(--navy-card);
+      border: 1px solid rgba(245,194,0,0.2);
+      border-radius: 20px;
+      padding: 2rem;
+      box-shadow: 0 24px 64px rgba(0,0,0,.5);
+    }
+
+    .form-label {
+      display: block;
+      font-size: .75rem; letter-spacing: .14em;
+      text-transform: uppercase; color: var(--muted);
+      margin-bottom: .45rem;
+    }
+
+    .form-input {
+      width: 100%;
+      background: var(--navy-light);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 8px;
+      padding: .8rem 1rem;
+      color: var(--white);
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 600;
+      outline: none;
+      transition: border-color .2s;
+      margin-bottom: 1.4rem;
+    }
+    .form-input:focus { border-color: var(--yellow); }
+    .form-input::placeholder { color: rgba(255,255,255,.25); font-weight: 400; }
+
+    .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
+
+    .landing-note {
+      font-size: .72rem; color: var(--muted);
+      text-align: center; margin-top: 1rem; line-height: 1.5;
+    }
+
+    /* ─── PLAYER SCREEN ──────────────────────────────── */
+    #player { padding-bottom: 3rem; }
+
+    .waiting-banner {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; text-align: center; padding: 4rem 2rem;
+      min-height: 60vh;
+    }
+    .spinner {
+      width: 48px; height: 48px; border-radius: 50%;
+      border: 3px solid rgba(245,194,0,0.2);
+      border-top-color: var(--yellow);
+      animation: spin 1s linear infinite; margin-bottom: 1.25rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Ball display */
+    .ball-display {
+      text-align: center; padding: 1.5rem 1rem 1rem;
+    }
+    .ball-label { margin-bottom: .5rem; }
+
+    .ball {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 88px; height: 88px; border-radius: 50%;
+      font-family: 'Anton', sans-serif; font-size: 2.4rem;
+      position: relative; transition: transform .3s;
+    }
+    .ball.orange { background: var(--orange); color: #fff; box-shadow: 0 0 36px rgba(232,119,34,.45); animation: glow-orange 2s ease infinite; }
+    .ball.empty  { background: var(--navy-light); color: var(--muted); box-shadow: none; animation: none; font-size: 1rem; }
+    @keyframes glow-orange { 0%,100% { box-shadow: 0 0 24px rgba(232,119,34,.3); } 50% { box-shadow: 0 0 48px rgba(232,119,34,.6); } }
+
+    .ball-letter {
+      font-family: 'Anton', sans-serif; font-size: 1rem;
+      color: var(--yellow); margin-right: .2rem;
+    }
+
+    /* Bingo card */
+    .bingo-wrapper { max-width: 370px; margin: 0 auto 1.5rem; padding: 0 1rem; }
+
+    .bingo-letters {
+      display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin-bottom: 4px;
+    }
+    .bingo-letter-cell {
+      background: var(--yellow); color: var(--navy);
+      font-family: 'Anton', sans-serif; font-size: 1.5rem;
+      text-align: center; padding: .45rem .2rem; border-radius: 8px;
+    }
+
+    .bingo-grid {
+      display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px;
+    }
+
+    .bingo-cell {
+      aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+      background: var(--navy-card);
+      border: 1px solid rgba(255,255,255,.07);
+      border-radius: 8px;
+      font-family: 'Anton', sans-serif; font-size: 1.25rem;
+      transition: all .25s;
+    }
+    .bingo-cell.is-free  { background: var(--green); color: #fff; font-size: .65rem; letter-spacing: .08em; border-color: var(--green); }
+    .bingo-cell.called   { border-color: var(--orange); animation: pop .35s ease; }
+    .bingo-cell.marked   { background: var(--yellow); color: var(--navy); border-color: var(--yellow); }
+    .bingo-cell.winning  { background: var(--orange) !important; color: #fff !important; border-color: var(--orange) !important; animation: win-pulse 1s ease infinite; }
+    @keyframes pop { 0%{transform:scale(1.25)} 100%{transform:scale(1)} }
+    @keyframes win-pulse { 0%,100%{box-shadow:0 0 0 0 rgba(232,119,34,.7)} 50%{box-shadow:0 0 0 8px rgba(232,119,34,0)} }
+
+    /* BINGO button */
+    .bingo-btn-wrap { max-width: 370px; margin: 0 auto 1.8rem; padding: 0 1rem; }
+    .btn-BINGO {
+      width: 100%; padding: 1.1rem 1rem;
+      background: linear-gradient(135deg, var(--yellow) 0%, var(--orange) 100%);
+      color: var(--navy); border: none; border-radius: 12px;
+      font-family: 'Anton', sans-serif; font-size: 2.2rem; letter-spacing: .1em;
+      cursor: pointer; transition: all .2s;
+      box-shadow: 0 4px 22px rgba(245,194,0,.3);
+    }
+    .btn-BINGO:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 8px 32px rgba(245,194,0,.5); }
+    .btn-BINGO:disabled {
+      background: var(--navy-light); color: var(--muted);
+      box-shadow: none; cursor: not-allowed;
+    }
+
+    /* Called numbers row */
+    .called-section { max-width: 370px; margin: 0 auto; padding: 0 1rem; }
+    .chips-row { display: flex; flex-wrap: wrap; gap: 5px; }
+    .chip {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 34px; height: 34px; border-radius: 50%;
+      font-family: 'Anton', sans-serif; font-size: .82rem;
+      background: var(--navy-light); color: var(--muted);
+      border: 1px solid rgba(255,255,255,.07);
+      transition: all .3s;
+    }
+    .chip.mine { background: var(--orange); color: #fff; border-color: var(--orange); }
+
+    /* Bingo celebration */
+    .celebration {
+      position: fixed; inset: 0; z-index: 200;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(0,0,0,.6); backdrop-filter: blur(4px);
+      opacity: 0; pointer-events: none; transition: opacity .3s;
+    }
+    .celebration.show { opacity: 1; pointer-events: all; }
+
+    .celebration-box {
+      background: linear-gradient(135deg, var(--yellow), var(--orange));
+      border-radius: 24px; padding: 3rem 4rem; text-align: center;
+      font-family: 'Anton', sans-serif; color: var(--navy);
+      transform: scale(.8); transition: transform .4s cubic-bezier(.34,1.56,.64,1);
+      box-shadow: 0 24px 80px rgba(0,0,0,.5);
+    }
+    .celebration.show .celebration-box { transform: scale(1); }
+    .celebration-title { font-size: clamp(3rem, 12vw, 5.5rem); line-height: .9; }
+    .celebration-sub { font-size: 1rem; opacity: .75; margin-top: .5rem; }
+
+    .confetti-wrap { position: fixed; inset: 0; z-index: 150; pointer-events: none; }
+    .confetti-piece {
+      position: absolute; top: -20px; border-radius: 2px;
+      animation: fall linear forwards;
+    }
+    @keyframes fall { 0%{transform:translateY(0) rotate(0deg);opacity:1} 100%{transform:translateY(110vh) rotate(720deg);opacity:0} }
+
+    /* ─── CALLER SCREEN ──────────────────────────────── */
+    #caller { padding-bottom: 3rem; }
+
+    .caller-grid {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 1.25rem;
+      max-width: 1080px; margin: 1.25rem auto;
+      padding: 0 1.25rem;
+    }
+    @media(max-width:768px) { .caller-grid { grid-template-columns: 1fr; } }
+
+    /* Stats bar */
+    .stats-bar {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: .75rem; max-width: 1080px; margin: 1.25rem auto 0; padding: 0 1.25rem;
+    }
+    @media(max-width:600px) { .stats-bar { grid-template-columns: repeat(2,1fr); } }
+
+    .stat-block {
+      background: var(--navy-card); border: 1px solid rgba(245,194,0,.12);
+      border-radius: 12px; padding: 1rem; text-align: center;
+    }
+    .stat-val { font-family: 'Anton', sans-serif; font-size: 2rem; color: var(--yellow); }
+    .stat-lbl { font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin-top: .2rem; }
+
+    /* Draw area */
+    .draw-area {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 2rem 1rem; text-align: center;
+    }
+
+    .draw-display { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
+    .draw-letter-big { font-family: 'Anton', sans-serif; font-size: 3.5rem; color: var(--yellow); }
+
+    .ball-lg {
+      width: 110px; height: 110px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Anton', sans-serif; font-size: 3rem;
+      transition: transform .3s;
+    }
+    .ball-lg.active { background: var(--orange); color: #fff; box-shadow: 0 0 48px rgba(232,119,34,.5); }
+    .ball-lg.idle   { background: var(--navy-light); color: var(--muted); font-size: 1rem; }
+
+    .btn-draw {
+      background: linear-gradient(135deg, var(--yellow), #FFD740);
+      color: var(--navy); border: none; border-radius: 12px;
+      font-family: 'Anton', sans-serif; font-size: 1.5rem; letter-spacing: .05em;
+      padding: 1rem 3rem; cursor: pointer; transition: all .2s;
+      box-shadow: 0 4px 22px var(--yellow-glow);
+    }
+    .btn-draw:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 32px var(--yellow-glow); }
+    .btn-draw:disabled { background: var(--navy-light); color: var(--muted); box-shadow: none; cursor: not-allowed; }
+
+    /* Numbers board (BINGO columns) */
+    .board-cols { display: grid; grid-template-columns: repeat(5, 1fr); gap: .5rem; }
+    .board-col-header { font-family: 'Anton', sans-serif; font-size: 1.1rem; text-align: center; color: var(--yellow); margin-bottom: .35rem; }
+    .board-col { display: flex; flex-direction: column; gap: 3px; }
+
+    .board-num {
+      width: 100%; aspect-ratio: 1;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Anton', sans-serif; font-size: .8rem;
+      background: var(--navy-mid); color: var(--muted);
+      border-radius: 5px; border: 1px solid rgba(255,255,255,.04);
+      transition: all .25s;
+    }
+    .board-num.called { background: rgba(232,119,34,.25); color: var(--orange); border-color: var(--orange-dim); }
+    .board-num.latest { background: var(--yellow); color: var(--navy); border-color: var(--yellow); box-shadow: 0 0 14px var(--yellow-glow); }
+
+    /* Player list */
+    .player-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: .65rem .9rem; background: var(--navy-mid);
+      border-radius: 8px; margin-bottom: .4rem;
+      border: 1px solid rgba(255,255,255,.05);
+    }
+    .player-row-name { font-weight: 600; font-size: .95rem; }
+    .player-row-card { font-size: .7rem; color: var(--muted); font-family: 'Anton', sans-serif; }
+    .badge-live {
+      font-size: .65rem; padding: .18rem .55rem; border-radius: 100px;
+      background: var(--green-dim); color: var(--green);
+      border: 1px solid rgba(34,197,94,.3); font-weight: 700; letter-spacing: .05em;
+    }
+
+    /* Claims */
+    .claim-row {
+      padding: .9rem; background: var(--navy-mid); border-radius: 8px;
+      border: 1px solid rgba(245,194,0,.22); margin-bottom: .6rem;
+    }
+    .claim-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: .5rem; }
+    .claim-name { font-weight: 700; font-size: .95rem; }
+    .claim-time { font-size: .7rem; color: var(--muted); }
+    .claim-patterns { font-size: .75rem; color: var(--muted); margin-bottom: .6rem; }
+    .claim-badge { font-size: .68rem; padding: .18rem .55rem; border-radius: 4px; font-weight: 700; letter-spacing: .05em; }
+    .claim-badge.confirmed { background: var(--green-dim); color: var(--green); }
+    .claim-badge.rejected  { background: var(--red-dim); color: var(--red); }
+
+    .empty-state { text-align: center; padding: 2rem; color: var(--muted); font-size: .9rem; }
+
+    /* ─── VERIFY MODAL ────────────────────────────────── */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 100;
+      background: rgba(0,0,0,.75); backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center; padding: 1rem;
+    }
+    .modal-overlay.hidden { display: none; }
+
+    .modal {
+      background: var(--navy-card);
+      border: 1px solid rgba(245,194,0,.25);
+      border-radius: 20px; padding: 2rem;
+      max-width: 420px; width: 100%;
+      max-height: 90vh; overflow-y: auto;
+    }
+
+    .modal-title { font-family: 'Anton', sans-serif; font-size: 1.6rem; color: var(--yellow); margin-bottom: .3rem; }
+    .modal-sub   { font-size: .85rem; color: var(--muted); margin-bottom: 1.25rem; }
+
+    .verify-result {
+      text-align: center; padding: .75rem 1rem; border-radius: 8px;
+      font-weight: 700; font-size: 1rem; margin-bottom: 1rem;
+    }
+    .verify-result.valid   { background: var(--green-dim); color: var(--green); border: 1px solid rgba(34,197,94,.3); }
+    .verify-result.invalid { background: var(--red-dim); color: var(--red); border: 1px solid rgba(239,68,68,.3); }
+
+    .mini-letters { display: grid; grid-template-columns: repeat(5,1fr); gap: 3px; margin-bottom: 3px; }
+    .mini-letter-cell {
+      background: var(--yellow); color: var(--navy);
+      font-family: 'Anton', sans-serif; font-size: .85rem;
+      text-align: center; padding: .25rem; border-radius: 4px;
+    }
+    .mini-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 3px; margin-bottom: 1rem; }
+    .mini-cell {
+      aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+      background: var(--navy-mid); border-radius: 4px;
+      font-family: 'Anton', sans-serif; font-size: .72rem;
+      border: 1px solid rgba(255,255,255,.05);
+    }
+    .mini-cell.free    { background: var(--green); color: #fff; font-size: .45rem; letter-spacing: .05em; border-color: var(--green); }
+    .mini-cell.called  { background: rgba(245,194,0,.18); color: var(--yellow); border-color: rgba(245,194,0,.3); }
+    .mini-cell.winning { background: var(--green); color: #fff; border-color: var(--green); }
+
+    .modal-actions { display: flex; gap: .6rem; }
+    .modal-actions .btn { flex: 1; font-size: .88rem; padding: .6rem .5rem; }
+
+    /* ─── TOAST ──────────────────────────────────────── */
+    .toast {
+      position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 300;
+      background: var(--navy-card); border: 1px solid rgba(245,194,0,.25);
+      border-radius: 12px; padding: .9rem 1.25rem;
+      font-weight: 600; font-size: .9rem; max-width: 280px;
+      transform: translateY(80px); opacity: 0;
+      transition: all .3s; pointer-events: none;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.success { border-color: rgba(34,197,94,.4); }
+    .toast.error   { border-color: rgba(239,68,68,.4); }
+
+    /* ─── RESPONSIVE TWEAKS ──────────────────────────── */
+    @media(max-width:440px) {
+      .bingo-cell { font-size: 1rem; }
+      .bingo-letter-cell { font-size: 1.2rem; }
+      .btn-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════════
+     LANDING SCREEN
+════════════════════════════════════════════════════════ -->
+<div id="landing" class="screen active">
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:2rem;text-align:center">
+
+    <div class="bracket-badge">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6m0-6 6 6"/></svg>
+      March Madness Edition
+    </div>
+
+    <h1 class="big-title display">KIN<br>BINGO</h1>
+    <p class="march-sub">2025 TOURNAMENT</p>
+
+    <div class="landing-form">
+      <label class="form-label" for="nameInput">Your Name</label>
+      <input id="nameInput" class="form-input" type="text" placeholder="e.g. Kala B." maxlength="30" autocomplete="off">
+
+      <div class="btn-grid">
+        <button class="btn btn-yellow btn-lg" onclick="joinPlayer()">PLAY BINGO</button>
+        <button class="btn btn-ghost btn-lg" onclick="joinCaller()">HOST GAME</button>
+      </div>
+
+      <p class="landing-note">
+        First time? Just enter your name and hit <strong style="color:var(--yellow)">Play Bingo</strong>.<br>
+        Running the game? Click <strong style="color:var(--white)">Host Game</strong>.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     PLAYER SCREEN
+════════════════════════════════════════════════════════ -->
+<div id="player" class="screen">
+  <header class="app-header">
+    <div class="logo-text">KIN <span>BINGO</span></div>
+    <div style="text-align:center">
+      <div style="font-size:.8rem;color:var(--muted)">Playing as</div>
+      <div style="font-weight:700;font-size:.95rem" id="p-name-display"></div>
+    </div>
+    <div style="text-align:right">
+      <div class="mono-label">Card #</div>
+      <div style="font-family:'Anton',sans-serif;font-size:.95rem;color:var(--yellow)" id="p-card-num"></div>
+    </div>
+  </header>
+
+  <!-- Waiting state -->
+  <div id="p-waiting" class="waiting-banner" style="display:none">
+    <div class="spinner"></div>
+    <div class="display" style="font-size:1.6rem;color:var(--yellow);margin-bottom:.5rem">WAITING FOR HOST</div>
+    <div style="color:var(--muted);font-size:.95rem">The host hasn't kicked off the game yet. Stand by!</div>
+  </div>
+
+  <!-- Game content -->
+  <div id="p-game" style="display:none">
+
+    <!-- Latest ball -->
+    <div class="ball-display">
+      <div class="mono-label ball-label">LATEST CALL</div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:.4rem">
+        <span class="ball-letter" id="p-ball-letter"></span>
+        <div class="ball empty" id="p-ball">
+          <span id="p-ball-num">—</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bingo Card -->
+    <div class="bingo-wrapper">
+      <div class="bingo-letters">
+        <div class="bingo-letter-cell">B</div>
+        <div class="bingo-letter-cell">I</div>
+        <div class="bingo-letter-cell">N</div>
+        <div class="bingo-letter-cell">G</div>
+        <div class="bingo-letter-cell">O</div>
+      </div>
+      <div class="bingo-grid" id="p-card-grid"></div>
+    </div>
+
+    <!-- BINGO Button -->
+    <div class="bingo-btn-wrap">
+      <button class="btn-BINGO" id="bingo-btn" disabled onclick="callBingo()">BINGO!</button>
+      <div style="font-size:.72rem;color:var(--muted);text-align:center;margin-top:.6rem" id="bingo-hint">
+        Complete a row, column, diagonal, or star pattern to call BINGO!
+      </div>
+    </div>
+
+    <!-- Called numbers -->
+    <div class="called-section">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem">
+        <div class="mono-label">Numbers Called</div>
+        <div class="mono-label" id="p-called-count">0 / 75</div>
+      </div>
+      <div class="chips-row" id="p-chips"></div>
+    </div>
+  </div>
+
+  <!-- Celebration overlay -->
+  <div class="celebration" id="celebration">
+    <div class="celebration-box">
+      <div class="celebration-title display">BINGO!</div>
+      <div class="celebration-sub" id="cel-sub">Waiting for host to verify...</div>
+    </div>
+  </div>
+
+  <div class="confetti-wrap" id="confetti"></div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     CALLER / HOST SCREEN
+════════════════════════════════════════════════════════ -->
+<div id="caller" class="screen">
+  <header class="app-header">
+    <div class="logo-text">KIN <span>BINGO</span> <span style="color:var(--muted);font-size:.8rem;letter-spacing:.06em">HOST</span></div>
+    <div style="font-size:.8rem;color:var(--muted)"><span id="c-player-count">0</span> players connected</div>
+    <div style="display:flex;gap:.6rem">
+      <button class="btn btn-ghost btn-sm" onclick="resetGame()">NEW GAME</button>
+    </div>
+  </header>
+
+  <!-- Stats -->
+  <div class="stats-bar">
+    <div class="stat-block"><div class="stat-val" id="s-players">0</div><div class="stat-lbl">Players</div></div>
+    <div class="stat-block"><div class="stat-val" id="s-called">0</div><div class="stat-lbl">Called</div></div>
+    <div class="stat-block"><div class="stat-val" id="s-remaining">75</div><div class="stat-lbl">Remaining</div></div>
+    <div class="stat-block"><div class="stat-val" id="s-claims">0</div><div class="stat-lbl">Pending Claims</div></div>
+  </div>
+
+  <div class="caller-grid">
+    <!-- LEFT COLUMN -->
+    <div>
+      <!-- Draw section -->
+      <div class="card" style="margin-bottom:1.25rem">
+        <div class="draw-area">
+          <div class="mono-label" style="margin-bottom:1rem">DRAW A BALL</div>
+          <div class="draw-display">
+            <span class="draw-letter-big" id="c-draw-letter">—</span>
+            <div class="ball-lg idle" id="c-draw-ball">
+              <span id="c-draw-num">?</span>
+            </div>
+          </div>
+          <button class="btn-draw" id="draw-btn" onclick="drawNumber()">DRAW NUMBER</button>
+          <div style="font-size:.75rem;color:var(--muted);margin-top:.7rem" id="c-remaining-text">75 balls remaining</div>
+        </div>
+      </div>
+
+      <!-- Numbers board -->
+      <div class="card">
+        <div class="mono-label" style="margin-bottom:.9rem">NUMBERS BOARD</div>
+        <div class="board-cols" id="c-board"></div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div>
+      <!-- Players list -->
+      <div class="card" style="margin-bottom:1.25rem">
+        <div class="mono-label" style="margin-bottom:.8rem">PLAYERS IN GAME</div>
+        <div id="c-players-list"><div class="empty-state">No players yet — share the link!</div></div>
+      </div>
+
+      <!-- Bingo claims -->
+      <div class="card">
+        <div class="mono-label" style="margin-bottom:.8rem">BINGO CLAIMS</div>
+        <div id="c-claims-list"><div class="empty-state">No claims yet.</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     VERIFY MODAL
+════════════════════════════════════════════════════════ -->
+<div class="modal-overlay hidden" id="verify-modal">
+  <div class="modal">
+    <div class="modal-title display">VERIFY BINGO</div>
+    <div class="modal-sub" id="m-player-info"></div>
+
+    <div id="m-result"></div>
+
+    <div class="mini-letters">
+      <div class="mini-letter-cell">B</div>
+      <div class="mini-letter-cell">I</div>
+      <div class="mini-letter-cell">N</div>
+      <div class="mini-letter-cell">G</div>
+      <div class="mini-letter-cell">O</div>
+    </div>
+    <div class="mini-grid" id="m-card"></div>
+    <div style="font-size:.75rem;color:var(--muted);margin-bottom:1rem" id="m-patterns"></div>
+
+    <div class="modal-actions">
+      <button class="btn btn-green" onclick="confirmBingo(true)">CONFIRM</button>
+      <button class="btn btn-red" onclick="confirmBingo(false)">REJECT</button>
+      <button class="btn btn-ghost" onclick="closeModal()">CLOSE</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- ════════════════════════════════════════════════════════
+     JAVASCRIPT
+════════════════════════════════════════════════════════ -->
+<script>
+/* ══════════════════════════════════════════════════════════
+   🔥 FIREBASE CONFIG — REPLACE WITH YOUR OWN VALUES BELOW
+   (See setup instructions in the README / deployment guide)
+══════════════════════════════════════════════════════════ */
+const firebaseConfig = {
+  apiKey:            "AIzaSyCN62rsj9NtziXfv93tHTd4_2tB38vjJ8A",
+  authDomain:        "fire-bingo-67bc5.firebaseapp.com",
+  databaseURL:       "https://fire-bingo-67bc5-default-rtdb.firebaseio.com",
+  projectId:         "fire-bingo-67bc5",
+  storageBucket:     "fire-bingo-67bc5.firebasestorage.app",
+  messagingSenderId: "551724422854",
+  appId:             "1:551724422854:web:4cffe267efdb3c0a4869c7"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+/* ─── STATE ─────────────────────────────────────────────── */
+let role          = null;
+let myName        = '';
+let myId          = '';
+let myCardNum     = '';
+let myCard        = [];   // 25 values; 'FREE' at index 12
+let calledNums    = [];
+let verifyClaim   = null;
+let bingoCalled   = false;
+
+/* ─── HELPERS ────────────────────────────────────────────── */
+const $ = id => document.getElementById(id);
+
+function rnd(chars, len) {
+  let out = '';
+  for (let i = 0; i < len; i++) out += chars[Math.floor(Math.random() * chars.length)];
+  return out;
+}
+
+function letterFor(n) {
+  if (n <= 15) return 'B';
+  if (n <= 30) return 'I';
+  if (n <= 45) return 'N';
+  if (n <= 60) return 'G';
+  return 'O';
+}
+
+function timeAgo(ts) {
+  const s = Math.round((Date.now() - ts) / 1000);
+  return s < 60 ? `${s}s ago` : `${Math.round(s/60)}m ago`;
+}
+
+/* ─── BINGO CARD GENERATION ──────────────────────────────── */
+function makeCard() {
+  const ranges = [[1,15],[16,30],[31,45],[46,60],[61,75]];
+  const cols = ranges.map(([lo,hi]) => {
+    const set = new Set();
+    while (set.size < 5) set.add(lo + Math.floor(Math.random() * (hi - lo + 1)));
+    return [...set];
+  });
+
+  const card = [];
+  for (let row = 0; row < 5; row++)
+    for (let col = 0; col < 5; col++)
+      card.push((row === 2 && col === 2) ? 'FREE' : cols[col][row]);
+  return card;
+}
+
+/* ─── BINGO CHECK ────────────────────────────────────────── */
+const PATTERNS = {
+  'Row 1':        [0,1,2,3,4],
+  'Row 2':        [5,6,7,8,9],
+  'Row 3':        [10,11,12,13,14],
+  'Row 4':        [15,16,17,18,19],
+  'Row 5':        [20,21,22,23,24],
+  'B Column':     [0,5,10,15,20],
+  'I Column':     [1,6,11,16,21],
+  'N Column':     [2,7,12,17,22],
+  'G Column':     [3,8,13,18,23],
+  'O Column':     [4,9,14,19,24],
+  'Diagonal ↘':  [0,6,12,18,24],
+  'Diagonal ↙':  [4,8,12,16,20],
+  'Star ⭐':      [0,4,12,20,24],
+};
+
+function checkBingo(card, called) {
+  const cs = new Set(called);
+  const marked = new Set(card.reduce((acc, v, i) => {
+    if (v === 'FREE' || cs.has(v)) acc.push(i);
+    return acc;
+  }, []));
+
+  return Object.entries(PATTERNS)
+    .filter(([,idxs]) => idxs.every(i => marked.has(i)))
+    .map(([name, indices]) => ({ name, indices }));
+}
+
+/* ─── SCREEN SWITCHING ───────────────────────────────────── */
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  $(id).classList.add('active');
+}
+
+/* ─── LANDING ACTIONS ────────────────────────────────────── */
+function getValidName() {
+  const n = $('nameInput').value.trim();
+  if (!n) { showToast('Please enter your name!', 'error'); return null; }
+  return n;
+}
+
+function joinPlayer() {
+  const name = getValidName(); if (!name) return;
+  myName = name; role = 'player';
+
+  // Persist player ID + card across refreshes
+  const storeKey = 'kinBingo_' + name;
+  let stored = sessionStorage.getItem(storeKey);
+  if (stored) {
+    const s = JSON.parse(stored);
+    myId = s.id; myCard = s.card; myCardNum = s.cardNum;
+  } else {
+    myId      = 'p_' + Date.now() + '_' + rnd('abcdefghjkmnpqrstuvwxyz0123456789', 8);
+    myCard    = makeCard();
+    myCardNum = rnd('ABCDEFGHJKLMNPQRSTUVWXYZ23456789', 6);
+    sessionStorage.setItem(storeKey, JSON.stringify({ id: myId, card: myCard, cardNum: myCardNum }));
+  }
+
+  // Register in Firebase
+  const ref = db.ref('players/' + myId);
+  ref.set({ name: myName, card: myCard, cardNum: myCardNum, joinedAt: Date.now(), active: true });
+  ref.child('active').onDisconnect().set(false);
+
+  // Update UI headers
+  $('p-name-display').textContent = myName;
+  $('p-card-num').textContent = '#' + myCardNum;
+
+  showScreen('player');
+  renderPlayerCard();
+  listenAsPlayer();
+}
+
+function joinCaller() {
+  const name = getValidName(); if (!name) return;
+  myName = name; role = 'caller';
+  showScreen('caller');
+  buildCallerBoard();
+  listenAsCaller();
+}
+
+/* ════════════════════════════════════════════════════════════
+   PLAYER VIEW
+════════════════════════════════════════════════════════════ */
+
+/* ─── Render card ────────────────────────────────────────── */
+function renderPlayerCard() {
+  const grid = $('p-card-grid');
+  grid.innerHTML = '';
+  myCard.forEach((val, i) => {
+    const cell = document.createElement('div');
+    cell.className = 'bingo-cell' + (val === 'FREE' ? ' is-free marked' : '');
+    cell.id = 'pc-' + i;
+    cell.textContent = val;
+    grid.appendChild(cell);
+  });
+}
+
+function refreshCardDisplay() {
+  const wins     = checkBingo(myCard, calledNums);
+  const winIdxs  = new Set(wins.flatMap(w => w.indices));
+  const calledS  = new Set(calledNums);
+
+  myCard.forEach((val, i) => {
+    const cell = $('pc-' + i); if (!cell) return;
+    if (val === 'FREE') return;
+    cell.className = 'bingo-cell';
+    if (winIdxs.has(i) && (calledS.has(val) || i === 12))      cell.classList.add('winning');
+    else if (calledS.has(val))                                  cell.classList.add('marked');
+  });
+
+  const bingoBtn = $('bingo-btn');
+  if (!bingoCalled) bingoBtn.disabled = wins.length === 0;
+}
+
+/* ─── Called numbers chips ───────────────────────────────── */
+function refreshChips() {
+  const cardSet  = new Set(myCard.filter(v => v !== 'FREE'));
+  const container = $('p-chips');
+  container.innerHTML = '';
+
+  // Show most recent first
+  [...calledNums].reverse().forEach(n => {
+    const chip = document.createElement('div');
+    chip.className = 'chip' + (cardSet.has(n) ? ' mine' : '');
+    chip.textContent = n;
+    container.appendChild(chip);
+  });
+
+  $('p-called-count').textContent = `${calledNums.length} / 75`;
+}
+
+/* ─── Latest ball display ────────────────────────────────── */
+function showBall(num) {
+  const ball = $('p-ball');
+  ball.className = 'ball orange';
+  $('p-ball-letter').textContent = letterFor(num) + '-';
+  $('p-ball-num').textContent = num;
+  ball.style.transform = 'scale(1.3)';
+  setTimeout(() => ball.style.transform = 'scale(1)', 300);
+}
+
+/* ─── Firebase listeners ─────────────────────────────────── */
+function listenAsPlayer() {
+  // Game status
+  db.ref('game/status').on('value', snap => {
+    const status = snap.val() || 'waiting';
+    $('p-waiting').style.display = status === 'playing' ? 'none' : 'flex';
+    $('p-game').style.display    = status === 'playing' ? 'block' : 'none';
+  });
+
+  // Called numbers
+  db.ref('game/calledNumbers').on('value', snap => {
+    const data = snap.val();
+    calledNums = data ? Object.values(data) : [];
+
+    if (calledNums.length > 0) showBall(calledNums[calledNums.length - 1]);
+    refreshCardDisplay();
+    refreshChips();
+  });
+
+  // Verification result for this player
+  db.ref('bingoClaims').on('value', snap => {
+    const claims = snap.val() || {};
+    Object.values(claims).forEach(c => {
+      if (c.playerId === myId && c.status === 'confirmed') {
+        $('cel-sub').textContent = '✓ CONFIRMED by host!';
+      }
+    });
+  });
+
+  // New game triggered by caller (gameId changes)
+  db.ref('game/gameId').on('value', snap => {
+    if (!snap.val()) return;
+    // Reset local state
+    calledNums = []; bingoCalled = false;
+    $('p-ball').className = 'ball empty';
+    $('p-ball-num').textContent = '—';
+    $('p-ball-letter').textContent = '';
+    renderPlayerCard(); refreshChips();
+    $('bingo-btn').disabled = true;
+    $('celebration').classList.remove('show');
+  });
+}
+
+/* ─── Call Bingo ─────────────────────────────────────────── */
+function callBingo() {
+  const wins = checkBingo(myCard, calledNums);
+  if (wins.length === 0) { showToast('No winning pattern yet!', 'error'); return; }
+
+  bingoCalled = true;
+  $('bingo-btn').disabled = true;
+
+  const claimId = 'claim_' + Date.now() + '_' + myId.slice(-4);
+  db.ref('bingoClaims/' + claimId).set({
+    playerId:  myId,
+    playerName: myName,
+    cardNum:   myCardNum,
+    card:      myCard,
+    patterns:  wins.map(w => w.name),
+    timestamp: Date.now(),
+    status:    'pending',
+  });
+
+  $('celebration').classList.add('show');
+  spawnConfetti();
+  setTimeout(() => $('celebration').classList.remove('show'), 5000);
+}
+
+/* ════════════════════════════════════════════════════════════
+   CALLER VIEW
+════════════════════════════════════════════════════════════ */
+
+/* ─── Build number board ─────────────────────────────────── */
+function buildCallerBoard() {
+  const board  = $('c-board');
+  board.innerHTML = '';
+  const letters = ['B','I','N','G','O'];
+  const ranges  = [[1,15],[16,30],[31,45],[46,60],[61,75]];
+
+  letters.forEach((letter, ci) => {
+    const col = document.createElement('div');
+    col.className = 'board-col';
+
+    const hdr = document.createElement('div');
+    hdr.className = 'board-col-header';
+    hdr.textContent = letter;
+    col.appendChild(hdr);
+
+    const [lo, hi] = ranges[ci];
+    for (let n = lo; n <= hi; n++) {
+      const chip = document.createElement('div');
+      chip.className = 'board-num';
+      chip.id = 'bn-' + n;
+      chip.textContent = n;
+      col.appendChild(chip);
+    }
+    board.appendChild(col);
+  });
+}
+
+function refreshCallerBoard() {
+  const cs = new Set(calledNums);
+  const latest = calledNums[calledNums.length - 1];
+  for (let n = 1; n <= 75; n++) {
+    const chip = $('bn-' + n); if (!chip) continue;
+    chip.classList.remove('called', 'latest');
+    if (n === latest)      chip.classList.add('latest');
+    else if (cs.has(n))    chip.classList.add('called');
+  }
+}
+
+function refreshCallerStats() {
+  const cnt = calledNums.length;
+  $('s-called').textContent    = cnt;
+  $('s-remaining').textContent = 75 - cnt;
+  $('c-remaining-text').textContent = `${75 - cnt} balls remaining`;
+}
+
+/* ─── Draw number ────────────────────────────────────────── */
+function drawNumber() {
+  const remaining = [];
+  const cs = new Set(calledNums);
+  for (let n = 1; n <= 75; n++) if (!cs.has(n)) remaining.push(n);
+
+  if (!remaining.length) { showToast('All 75 numbers called!', 'error'); return; }
+
+  const num = remaining[Math.floor(Math.random() * remaining.length)];
+  const letter = letterFor(num);
+
+  db.ref('game/calledNumbers').push(num);
+  db.ref('game/status').set('playing');
+
+  // Local update (also comes via listener but instant feels better)
+  calledNums.push(num);
+  refreshCallerBoard();
+  refreshCallerStats();
+
+  const ball = $('c-draw-ball');
+  ball.className = 'ball-lg active';
+  $('c-draw-num').textContent    = num;
+  $('c-draw-letter').textContent = letter;
+  ball.style.transform = 'scale(1.2)';
+  setTimeout(() => ball.style.transform = 'scale(1)', 300);
+
+  if (remaining.length === 1) $('draw-btn').disabled = true;
+  showToast(`Called: ${letter}-${num}`, 'success');
+}
+
+/* ─── Firebase listeners ─────────────────────────────────── */
+function listenAsCaller() {
+  // Players
+  db.ref('players').on('value', snap => {
+    const players = snap.val() || {};
+    const active  = Object.values(players).filter(p => p.active !== false);
+    $('c-player-count').textContent = active.length;
+    $('s-players').textContent      = active.length;
+    renderPlayerList(active);
+  });
+
+  // Called numbers
+  db.ref('game/calledNumbers').on('value', snap => {
+    const data = snap.val();
+    calledNums = data ? Object.values(data) : [];
+    refreshCallerBoard();
+    refreshCallerStats();
+
+    if (calledNums.length > 0) {
+      const n = calledNums[calledNums.length - 1];
+      $('c-draw-ball').className = 'ball-lg active';
+      $('c-draw-num').textContent    = n;
+      $('c-draw-letter').textContent = letterFor(n);
+    }
+  });
+
+  // Bingo claims
+  db.ref('bingoClaims').on('value', snap => {
+    const data   = snap.val() || {};
+    const claims = Object.entries(data)
+      .map(([id, v]) => ({ id, ...v }))
+      .sort((a, b) => b.timestamp - a.timestamp);
+
+    const pending = claims.filter(c => c.status === 'pending').length;
+    $('s-claims').textContent = pending;
+    renderClaims(claims);
+  });
+}
+
+function renderPlayerList(players) {
+  const el = $('c-players-list');
+  if (!players.length) { el.innerHTML = '<div class="empty-state">No players yet — share the link!</div>'; return; }
+  el.innerHTML = players.map(p => `
+    <div class="player-row">
+      <div>
+        <div class="player-row-name">${p.name}</div>
+        <div class="player-row-card">Card #${p.cardNum || '------'}</div>
+      </div>
+      <span class="badge-live">LIVE</span>
+    </div>
+  `).join('');
+}
+
+function renderClaims(claims) {
+  const el = $('c-claims-list');
+  if (!claims.length) { el.innerHTML = '<div class="empty-state">No claims yet.</div>'; return; }
+  el.innerHTML = claims.map(c => {
+    const actions = c.status === 'pending'
+      ? `<div style="display:flex;gap:.4rem">
+           <button class="btn btn-yellow btn-sm" onclick="openVerify('${c.id}')">VERIFY</button>
+         </div>`
+      : `<span class="claim-badge ${c.status}">${c.status.toUpperCase()}</span>`;
+
+    return `
+      <div class="claim-row">
+        <div class="claim-head">
+          <div>
+            <div class="claim-name">${c.playerName}</div>
+            <div class="claim-time">Card #${c.cardNum || '?'} · ${timeAgo(c.timestamp)}</div>
+          </div>
+          ${actions}
+        </div>
+        <div class="claim-patterns">Claims: ${(c.patterns || []).join(', ')}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+/* ─── Verify Modal ───────────────────────────────────────── */
+function openVerify(claimId) {
+  db.ref('bingoClaims/' + claimId).once('value', snap => {
+    const claim = snap.val(); if (!claim) return;
+    verifyClaim = { id: claimId, ...claim };
+
+    $('m-player-info').textContent = `${claim.playerName} · Card #${claim.cardNum || '?'}`;
+
+    const wins     = checkBingo(claim.card, calledNums);
+    const winIdxs  = new Set(wins.flatMap(w => w.indices));
+    const calledS  = new Set(calledNums);
+    const isValid  = wins.length > 0;
+
+    $('m-result').innerHTML = `<div class="verify-result ${isValid ? 'valid' : 'invalid'}">
+      ${isValid ? '✓ VALID BINGO — ' + wins.map(w=>w.name).join(', ') : '✗ INVALID — no winning pattern found'}
+    </div>`;
+
+    $('m-patterns').textContent = `Player claimed: ${(claim.patterns||[]).join(', ')}`;
+
+    // Mini card
+    const grid = $('m-card'); grid.innerHTML = '';
+    claim.card.forEach((val, i) => {
+      const cell = document.createElement('div');
+      cell.className = 'mini-cell';
+      if (val === 'FREE')                               { cell.classList.add('free');    cell.textContent = 'FREE'; }
+      else if (winIdxs.has(i) && calledS.has(val))     { cell.classList.add('winning'); cell.textContent = val; }
+      else if (calledS.has(val))                        { cell.classList.add('called');  cell.textContent = val; }
+      else                                              {                                cell.textContent = val; }
+      grid.appendChild(cell);
+    });
+
+    $('verify-modal').classList.remove('hidden');
+  });
+}
+
+function confirmBingo(isValid) {
+  if (!verifyClaim) return;
+  db.ref('bingoClaims/' + verifyClaim.id + '/status').set(isValid ? 'confirmed' : 'rejected');
+  showToast(isValid ? `BINGO confirmed for ${verifyClaim.playerName}!` : `Bingo rejected.`, isValid ? 'success' : 'error');
+  closeModal();
+}
+
+function closeModal() {
+  $('verify-modal').classList.add('hidden');
+  verifyClaim = null;
+}
+
+/* ─── New Game ───────────────────────────────────────────── */
+function resetGame() {
+  if (!confirm('Start a new game? This clears all called numbers and claims.\nPlayers will need to refresh for a new card.')) return;
+  db.ref('game').set({ status: 'waiting', calledNumbers: null, gameId: Date.now() });
+  db.ref('bingoClaims').remove();
+  db.ref('players').remove();
+
+  calledNums = [];
+  refreshCallerBoard();
+  refreshCallerStats();
+
+  $('c-draw-ball').className = 'ball-lg idle';
+  $('c-draw-num').textContent    = '?';
+  $('c-draw-letter').textContent = '—';
+  $('draw-btn').disabled = false;
+  $('s-players').textContent = '0';
+  $('c-player-count').textContent = '0';
+
+  showToast('New game started! Ask players to refresh.', 'success');
+}
+
+/* ─── Confetti ───────────────────────────────────────────── */
+function spawnConfetti() {
+  const wrap   = $('confetti');
+  const colors = ['#F5C200','#E87722','#22C55E','#3B82F6','#EF4444','#fff'];
+  wrap.innerHTML = '';
+  for (let i = 0; i < 60; i++) {
+    const p = document.createElement('div');
+    p.className = 'confetti-piece';
+    p.style.cssText = [
+      `left:${Math.random()*100}vw`,
+      `background:${colors[Math.floor(Math.random()*colors.length)]}`,
+      `width:${5+Math.random()*8}px`,
+      `height:${10+Math.random()*12}px`,
+      `animation-duration:${2+Math.random()*3}s`,
+      `animation-delay:${Math.random()*0.6}s`,
+      `border-radius:${Math.random()>.5?'50%':'2px'}`,
+    ].join(';');
+    wrap.appendChild(p);
+  }
+  setTimeout(() => wrap.innerHTML = '', 6000);
+}
+
+/* ─── Toast ──────────────────────────────────────────────── */
+function showToast(msg, type='') {
+  const t = $('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+</script>
+</body>
+</html>
