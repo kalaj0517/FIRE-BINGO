@@ -56,19 +56,14 @@
     }
 
     /* ── PAGE TRANSITIONS ───────────────────────────── */
-    .screen {
-      position: fixed; inset: 0; z-index: 1;
-      overflow-y: auto;
-      opacity: 0;
-      transform: translateY(30px);
-      pointer-events: none;
-      transition: opacity .45s cubic-bezier(.4,0,.2,1), transform .45s cubic-bezier(.4,0,.2,1);
-    }
+    .screen { display: none; }
     .screen.active {
-      opacity: 1; transform: translateY(0); pointer-events: all;
+      display: block;
+      animation: pageIn .4s cubic-bezier(.4,0,.2,1) both;
     }
-    .screen.exit-up {
-      opacity: 0; transform: translateY(-40px); pointer-events: none;
+    @keyframes pageIn {
+      from { opacity: 0; transform: translateY(22px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
 
     /* ─── TYPOGRAPHY ─────────────────────────────────── */
@@ -643,13 +638,9 @@ function checkBingoByCalledNums(card, called) {
 
 /* ── SCREEN TRANSITIONS ──────────────────────────────── */
 function showScreen(toId) {
-  const current = document.querySelector('.screen.active');
-  const next    = $(toId);
-  if (current && current !== next) {
-    current.classList.add('exit-up');
-    setTimeout(() => current.classList.remove('active', 'exit-up'), 450);
-  }
-  setTimeout(() => next.classList.add('active'), 60);
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  $(toId).classList.add('active');
+  window.scrollTo(0, 0);
 }
 
 /* ── PERSIST DABBED STATE ────────────────────────────── */
