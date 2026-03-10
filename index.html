@@ -3,59 +3,68 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KIN BINGO — March Madness 2025</title>
+  <title>KIN BINGO — Friday the 13th</title>
   <link rel="stylesheet" href="https://brand.kin.insure/tokens.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Oswald:wght@400;600;700&display=swap" rel="stylesheet">
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
   <style>
+    /* ══════════════════════════════════════════════════
+       FRIDAY THE 13th COLOR TOKENS
+    ══════════════════════════════════════════════════ */
     :root {
-      --yellow:      #F5C200;
-      --yellow-glow: rgba(245,194,0,0.35);
-      --orange:      #E87722;
-      --orange-dim:  rgba(232,119,34,0.18);
-      --navy:        #08111F;
-      --navy-mid:    #0F1E30;
-      --navy-card:   #152A42;
-      --navy-light:  #1E3A57;
-      --green:       #22C55E;
-      --green-dim:   rgba(34,197,94,0.15);
-      --red:         #EF4444;
-      --red-dim:     rgba(239,68,68,0.15);
-      --muted:       #6B8BAD;
-      --white:       #FFFFFF;
+      --blood:       #C0001A;
+      --blood-bright:#E8001F;
+      --blood-glow:  rgba(192,0,26,0.45);
+      --blood-dim:   rgba(192,0,26,0.18);
+      --black:       #050808;
+      --dark:        #0D1210;
+      --dark-mid:    #141A17;
+      --dark-card:   #192218;
+      --dark-light:  #223028;
+      --fog:         #3D5C44;
+      --fog-dim:     rgba(61,92,68,0.18);
+      --green-evil:  #4AFF6A;
+      --green-dim:   rgba(74,255,106,0.15);
+      --muted:       #5A7A62;
+      --white:       #E8F0EA;
+      --slash:       #8B0000;
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      background: var(--navy);
+      background: var(--black);
       color: var(--white);
-      font-family: 'Barlow Condensed', sans-serif;
+      font-family: 'Oswald', sans-serif;
       min-height: 100vh;
       overflow-x: hidden;
     }
 
+    /* Dripping blood + fog atmosphere */
     body::before {
       content: '';
       position: fixed; inset: 0; z-index: 0; pointer-events: none;
       background:
-        radial-gradient(ellipse 60% 40% at 50% 100%, rgba(232,119,34,0.06) 0%, transparent 70%),
-        repeating-linear-gradient(0deg, transparent, transparent 79px, rgba(255,255,255,0.025) 79px, rgba(255,255,255,0.025) 80px),
-        repeating-linear-gradient(90deg, transparent, transparent 79px, rgba(255,255,255,0.025) 79px, rgba(255,255,255,0.025) 80px);
-    }
-    body::after {
-      content: '';
-      position: fixed; bottom: -300px; left: 50%; z-index: 0;
-      transform: translateX(-50%);
-      width: 700px; height: 700px;
-      border: 2px solid rgba(245,194,0,0.06);
-      border-radius: 50%; pointer-events: none;
+        radial-gradient(ellipse 80% 50% at 50% 0%, rgba(192,0,26,0.12) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 30% at 20% 100%, rgba(0,30,10,0.6) 0%, transparent 70%),
+        radial-gradient(ellipse 60% 30% at 80% 100%, rgba(0,30,10,0.6) 0%, transparent 70%),
+        repeating-linear-gradient(0deg, transparent, transparent 119px, rgba(192,0,26,0.03) 119px, rgba(192,0,26,0.03) 120px);
     }
 
-    /* ── PAGE TRANSITIONS ───────────────────────────── */
+    /* Drip effect at top */
+    body::after {
+      content: '';
+      position: fixed; top: 0; left: 0; right: 0; z-index: 0;
+      height: 6px;
+      background: var(--blood);
+      box-shadow: 0 0 24px 4px var(--blood-glow);
+      pointer-events: none;
+    }
+
+    /* ── PAGE TRANSITIONS ─────────────────────────── */
     .screen { display: none; }
     .screen.active {
       display: block;
@@ -66,212 +75,260 @@
       to   { opacity: 1; transform: translateY(0); }
     }
 
-    /* ─── TYPOGRAPHY ─────────────────────────────────── */
-    .display    { font-family: 'Anton', sans-serif; letter-spacing: 0.02em; }
-    .mono-label { font-size: 0.7rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+    /* ─── TYPOGRAPHY ──────────────────────────────── */
+    .spooky   { font-family: 'Creepster', cursive; letter-spacing: 0.04em; }
+    .mono-label { font-size: 0.68rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); }
 
-    /* ─── SHARED COMPONENTS ──────────────────────────── */
+    /* ─── SHARED COMPONENTS ───────────────────────── */
     .card {
-      background: var(--navy-card);
-      border: 1px solid rgba(245,194,0,0.12);
-      border-radius: 16px; padding: 1.4rem;
+      background: var(--dark-card);
+      border: 1px solid rgba(192,0,26,0.2);
+      border-radius: 12px; padding: 1.4rem;
     }
 
     .btn {
-      border: none; border-radius: 8px; cursor: pointer;
-      font-family: 'Anton', sans-serif; letter-spacing: 0.05em;
-      text-transform: uppercase; transition: all .15s; outline: none;
+      border: none; border-radius: 6px; cursor: pointer;
+      font-family: 'Oswald', sans-serif; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      transition: all .15s; outline: none;
     }
-    .btn:disabled { opacity: .35; cursor: not-allowed; transform: none !important; }
-    .btn-yellow { background: var(--yellow); color: var(--navy); }
-    .btn-yellow:hover:not(:disabled) { background: #FFD740; transform: translateY(-2px); box-shadow: 0 6px 22px var(--yellow-glow); }
-    .btn-ghost { background: transparent; color: var(--white); border: 1px solid rgba(255,255,255,0.18); }
-    .btn-ghost:hover:not(:disabled) { border-color: var(--yellow); color: var(--yellow); }
-    .btn-green { background: var(--green); color: #fff; }
-    .btn-green:hover:not(:disabled) { background: #16A34A; transform: translateY(-2px); }
-    .btn-red { background: var(--red); color: #fff; }
-    .btn-red:hover:not(:disabled) { background: #DC2626; transform: translateY(-2px); }
-    .btn-lg { font-size: 1.1rem; padding: .85rem 2rem; }
-    .btn-sm { font-size: .78rem; padding: .35rem .75rem; border-radius: 6px; }
+    .btn:disabled { opacity: .3; cursor: not-allowed; transform: none !important; }
 
-    /* ─── HEADER ─────────────────────────────────────── */
+    .btn-blood {
+      background: var(--blood); color: var(--white);
+      box-shadow: 0 0 18px var(--blood-glow);
+    }
+    .btn-blood:hover:not(:disabled) {
+      background: var(--blood-bright); transform: translateY(-2px);
+      box-shadow: 0 6px 28px var(--blood-glow);
+    }
+    .btn-ghost {
+      background: transparent; color: var(--white);
+      border: 1px solid rgba(255,255,255,0.15);
+    }
+    .btn-ghost:hover:not(:disabled) { border-color: var(--blood); color: var(--blood); }
+    .btn-green { background: var(--green-evil); color: var(--black); }
+    .btn-green:hover:not(:disabled) { background: #30e050; transform: translateY(-2px); }
+    .btn-red   { background: var(--blood); color: #fff; }
+    .btn-red:hover:not(:disabled)   { background: var(--blood-bright); transform: translateY(-2px); }
+    .btn-lg { font-size: 1.1rem; padding: .85rem 2rem; }
+    .btn-sm { font-size: .75rem; padding: .32rem .7rem; border-radius: 4px; }
+
+    /* ─── HEADER ──────────────────────────────────── */
     .app-header {
       display: flex; align-items: center; justify-content: space-between;
       padding: .9rem 1.5rem;
-      background: rgba(8,17,31,0.85); backdrop-filter: blur(10px);
-      border-bottom: 1px solid rgba(245,194,0,0.14);
+      background: rgba(5,8,8,0.9); backdrop-filter: blur(10px);
+      border-bottom: 2px solid var(--blood);
+      box-shadow: 0 2px 24px var(--blood-glow);
       position: sticky; top: 0; z-index: 50;
     }
-    .logo-text { font-family: 'Anton', sans-serif; font-size: 1.3rem; color: var(--yellow); letter-spacing: 0.08em; }
-    .logo-text span { color: var(--orange); }
+    .logo-text {
+      font-family: 'Creepster', cursive; font-size: 1.6rem;
+      color: var(--blood); letter-spacing: 0.06em;
+      text-shadow: 0 0 20px var(--blood-glow);
+    }
+    .logo-text span { color: var(--white); }
 
-    /* ─── LANDING ─────────────────────────────────────── */
+    /* ─── LANDING ─────────────────────────────────── */
     #landing {
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
       min-height: 100vh; padding: 2rem; text-align: center;
     }
-    .bracket-badge {
+
+    .horror-badge {
       display: inline-flex; align-items: center; gap: .5rem;
-      background: var(--orange); color: #fff;
-      font-family: 'Anton', sans-serif; font-size: .7rem; letter-spacing: .2em;
-      padding: .3rem 1rem; border-radius: 100px;
-      margin-bottom: 1.25rem; text-transform: uppercase;
+      background: var(--blood); color: var(--white);
+      font-family: 'Oswald', sans-serif; font-weight: 700;
+      font-size: .72rem; letter-spacing: .22em;
+      padding: .3rem 1.1rem; border-radius: 4px;
+      margin-bottom: 1.4rem; text-transform: uppercase;
+      box-shadow: 0 0 18px var(--blood-glow);
     }
+
     .big-title {
-      font-family: 'Anton', sans-serif;
-      font-size: clamp(4rem, 12vw, 8rem); line-height: .88;
-      color: var(--yellow); text-shadow: 5px 5px 0 rgba(0,0,0,.35);
-      margin-bottom: .4rem;
+      font-family: 'Creepster', cursive;
+      font-size: clamp(4.5rem, 13vw, 9rem);
+      line-height: .85;
+      color: var(--blood);
+      text-shadow: 3px 3px 0 #000, 0 0 40px var(--blood-glow);
+      margin-bottom: .5rem;
     }
-    .march-sub {
-      font-family: 'Anton', sans-serif;
-      font-size: clamp(1rem, 3vw, 1.6rem); letter-spacing: .22em;
-      color: rgba(255,255,255,.75); margin-bottom: 2.5rem;
+
+    .horror-sub {
+      font-family: 'Oswald', sans-serif; font-weight: 700;
+      font-size: clamp(.9rem, 2.5vw, 1.4rem); letter-spacing: .3em;
+      color: rgba(232,240,234,.5); margin-bottom: 2.5rem;
+      text-transform: uppercase;
     }
+
     .landing-form {
-      max-width: 420px; width: 100%;
-      background: var(--navy-card); border: 1px solid rgba(245,194,0,0.2);
-      border-radius: 20px; padding: 2rem; box-shadow: 0 24px 64px rgba(0,0,0,.5);
+      max-width: 400px; width: 100%;
+      background: var(--dark-card);
+      border: 1px solid rgba(192,0,26,0.3);
+      border-radius: 12px; padding: 2rem;
+      box-shadow: 0 20px 60px rgba(0,0,0,.7), 0 0 40px rgba(192,0,26,.08);
     }
     .form-label {
-      display: block; font-size: .75rem; letter-spacing: .14em;
+      display: block; font-size: .72rem; letter-spacing: .18em;
       text-transform: uppercase; color: var(--muted); margin-bottom: .45rem;
     }
     .form-input {
-      width: 100%; background: var(--navy-light);
-      border: 1px solid rgba(255,255,255,.1); border-radius: 8px;
+      width: 100%; background: var(--dark-light);
+      border: 1px solid rgba(255,255,255,.08); border-radius: 6px;
       padding: .8rem 1rem; color: var(--white);
-      font-family: 'Barlow Condensed', sans-serif; font-size: 1.1rem; font-weight: 600;
+      font-family: 'Oswald', sans-serif; font-size: 1.1rem; font-weight: 600;
       outline: none; transition: border-color .2s; margin-bottom: 1.4rem;
     }
-    .form-input:focus { border-color: var(--yellow); }
-    .form-input::placeholder { color: rgba(255,255,255,.25); font-weight: 400; }
+    .form-input:focus { border-color: var(--blood); }
+    .form-input::placeholder { color: rgba(255,255,255,.2); font-weight: 400; }
     .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
-    .landing-note { font-size: .72rem; color: var(--muted); text-align: center; margin-top: 1rem; line-height: 1.5; }
+    .landing-note { font-size: .7rem; color: var(--muted); text-align: center; margin-top: 1rem; line-height: 1.6; }
 
-    /* ─── PLAYER SCREEN ──────────────────────────────── */
-    #player { padding-bottom: 3rem; background: var(--navy); }
+    /* ─── PLAYER SCREEN ───────────────────────────── */
+    #player { padding-bottom: 3rem; background: var(--black); }
 
     .waiting-banner {
       display: flex; flex-direction: column; align-items: center;
       justify-content: center; text-align: center; padding: 4rem 2rem; min-height: 60vh;
     }
     .spinner {
-      width: 48px; height: 48px; border-radius: 50%;
-      border: 3px solid rgba(245,194,0,0.2); border-top-color: var(--yellow);
-      animation: spin 1s linear infinite; margin-bottom: 1.25rem;
+      width: 52px; height: 52px; border-radius: 50%;
+      border: 3px solid rgba(192,0,26,0.15); border-top-color: var(--blood);
+      animation: spin 1.2s linear infinite; margin-bottom: 1.25rem;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    /* Ball display */
     .ball-display { text-align: center; padding: 1.5rem 1rem 1rem; }
-    .ball-label { margin-bottom: .5rem; }
+    .ball-label { margin-bottom: .6rem; }
     .ball {
       display: inline-flex; align-items: center; justify-content: center;
-      width: 88px; height: 88px; border-radius: 50%;
-      font-family: 'Anton', sans-serif; font-size: 2.4rem;
-      position: relative; transition: transform .3s;
+      width: 90px; height: 90px; border-radius: 50%;
+      font-family: 'Creepster', cursive; font-size: 2.6rem;
+      transition: transform .3s;
     }
-    .ball.orange { background: var(--orange); color: #fff; box-shadow: 0 0 36px rgba(232,119,34,.45); animation: glow-orange 2s ease infinite; }
-    .ball.empty  { background: var(--navy-light); color: var(--muted); box-shadow: none; animation: none; font-size: 1rem; }
-    @keyframes glow-orange { 0%,100%{box-shadow:0 0 24px rgba(232,119,34,.3)} 50%{box-shadow:0 0 48px rgba(232,119,34,.6)} }
-    .ball-letter { font-family: 'Anton', sans-serif; font-size: 1rem; color: var(--yellow); margin-right: .2rem; }
+    .ball.active {
+      background: var(--blood); color: var(--white);
+      box-shadow: 0 0 40px var(--blood-glow);
+      animation: pulse-blood 2s ease infinite;
+    }
+    .ball.empty { background: var(--dark-light); color: var(--muted); font-size: 1rem; font-family: 'Oswald', sans-serif; }
+    @keyframes pulse-blood { 0%,100%{box-shadow:0 0 20px var(--blood-glow)} 50%{box-shadow:0 0 50px rgba(192,0,26,.7)} }
+    .ball-letter { font-family: 'Creepster', cursive; font-size: 1.1rem; color: var(--blood); margin-right: .25rem; }
 
-    /* ── BINGO CARD ───────────────────────────────────── */
+    /* ── BINGO CARD ─────────────────────────────────── */
     .bingo-wrapper { max-width: 370px; margin: 0 auto 1rem; padding: 0 1rem; }
     .bingo-letters { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin-bottom: 4px; }
     .bingo-letter-cell {
-      background: var(--yellow); color: var(--navy);
-      font-family: 'Anton', sans-serif; font-size: 1.5rem;
-      text-align: center; padding: .45rem .2rem; border-radius: 8px;
+      background: var(--blood); color: var(--white);
+      font-family: 'Creepster', cursive; font-size: 1.6rem;
+      text-align: center; padding: .4rem .2rem; border-radius: 6px;
+      text-shadow: 0 0 12px var(--blood-glow);
     }
     .bingo-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
 
-    /* Base cell */
+    /* Base cell — PLAIN, no hints at all */
     .bingo-cell {
       aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
-      background: var(--navy-card); border: 1px solid rgba(255,255,255,.07);
-      border-radius: 8px; font-family: 'Anton', sans-serif; font-size: 1.25rem;
-      transition: all .2s; user-select: none;
+      background: var(--dark-card);
+      border: 1px solid rgba(255,255,255,.07);
+      border-radius: 6px;
+      font-family: 'Oswald', sans-serif; font-weight: 600; font-size: 1.2rem;
+      color: var(--white);
+      transition: background .15s;
+      user-select: none; cursor: pointer;
     }
-    /* FREE — always green */
+    .bingo-cell:hover:not(.is-free):not(.dabbed) {
+      background: var(--dark-light);
+    }
+
+    /* FREE space */
     .bingo-cell.is-free {
-      background: var(--green); color: #fff; font-size: .65rem; letter-spacing: .08em;
-      border-color: var(--green); cursor: default;
+      background: var(--dark-light); color: var(--muted);
+      font-size: .6rem; letter-spacing: .1em;
+      border-color: rgba(255,255,255,.12); cursor: default;
     }
-    /* Number called but not yet dabbed — tap me! */
-    .bingo-cell.available {
-      border-color: var(--orange); box-shadow: 0 0 0 2px rgba(232,119,34,.25);
-      cursor: pointer; animation: nudge .4s ease;
+
+    /* Player dabbed this cell — shows an X mark */
+    .bingo-cell.dabbed {
+      background: var(--blood);
+      color: var(--white);
+      border-color: var(--blood);
+      font-size: 1.7rem;
+      cursor: default;
+      text-shadow: 0 0 8px rgba(255,255,255,.4);
     }
-    .bingo-cell.available:hover { background: rgba(232,119,34,.18); transform: scale(1.08); }
-    /* Manually dabbed */
-    .bingo-cell.dabbed { background: var(--yellow); color: var(--navy); border-color: var(--yellow); cursor: default; }
-    /* Part of a winning line */
+
+    /* Winning line (only shown on player's own winning cells) */
     .bingo-cell.winning {
-      background: var(--orange) !important; color: #fff !important;
-      border-color: var(--orange) !important; animation: win-pulse 1s ease infinite !important;
+      background: var(--blood-bright) !important;
+      color: #fff !important;
+      border-color: var(--blood-bright) !important;
+      animation: win-drip 1s ease infinite !important;
       cursor: default;
     }
-    @keyframes nudge    { 0%{transform:scale(1)} 50%{transform:scale(1.12)} 100%{transform:scale(1)} }
-    @keyframes win-pulse{ 0%,100%{box-shadow:0 0 0 0 rgba(232,119,34,.7)} 50%{box-shadow:0 0 0 8px rgba(232,119,34,0)} }
-
-    /* Dab hint banner */
-    .dab-hint {
-      text-align: center; font-size: .75rem; font-weight: 700;
-      color: var(--orange); letter-spacing: .06em;
-      min-height: 1.4em; margin-bottom: .5rem; transition: opacity .3s;
-    }
+    @keyframes win-drip { 0%,100%{box-shadow:0 0 0 0 var(--blood-glow)} 50%{box-shadow:0 0 0 8px rgba(192,0,26,0)} }
 
     /* BINGO button */
     .bingo-btn-wrap { max-width: 370px; margin: 0 auto 1.8rem; padding: 0 1rem; }
     .btn-BINGO {
       width: 100%; padding: 1.1rem 1rem;
-      background: linear-gradient(135deg, var(--yellow) 0%, var(--orange) 100%);
-      color: var(--navy); border: none; border-radius: 12px;
-      font-family: 'Anton', sans-serif; font-size: 2.2rem; letter-spacing: .1em;
-      cursor: pointer; transition: all .2s; box-shadow: 0 4px 22px rgba(245,194,0,.3);
+      background: linear-gradient(135deg, var(--blood) 0%, #7a0010 100%);
+      color: var(--white); border: none; border-radius: 10px;
+      font-family: 'Creepster', cursive; font-size: 2.5rem; letter-spacing: .12em;
+      cursor: pointer; transition: all .2s;
+      box-shadow: 0 4px 24px var(--blood-glow);
+      text-shadow: 0 0 12px rgba(255,255,255,.3);
     }
-    .btn-BINGO:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 8px 32px rgba(245,194,0,.5); }
-    .btn-BINGO:disabled { background: var(--navy-light); color: var(--muted); box-shadow: none; cursor: not-allowed; }
+    .btn-BINGO:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 8px 36px var(--blood-glow); }
+    .btn-BINGO:disabled {
+      background: var(--dark-light); color: var(--muted);
+      box-shadow: none; cursor: not-allowed; font-size: 2rem;
+    }
 
-    /* Called numbers chips */
+    /* Called numbers — all look identical, no hints */
     .called-section { max-width: 370px; margin: 0 auto; padding: 0 1rem; }
     .chips-row { display: flex; flex-wrap: wrap; gap: 5px; }
     .chip {
       display: inline-flex; align-items: center; justify-content: center;
       width: 34px; height: 34px; border-radius: 50%;
-      font-family: 'Anton', sans-serif; font-size: .82rem;
-      background: var(--navy-light); color: var(--muted);
-      border: 1px solid rgba(255,255,255,.07); transition: all .3s;
+      font-family: 'Oswald', sans-serif; font-weight: 600; font-size: .82rem;
+      background: var(--dark-light); color: var(--muted);
+      border: 1px solid rgba(255,255,255,.06);
     }
-    .chip.dabbed    { background: var(--yellow); color: var(--navy); border-color: var(--yellow); }
-    .chip.available { background: var(--orange); color: #fff; border-color: var(--orange); }
+    /* All chips same — no color differentiation for players */
 
     /* Celebration */
     .celebration {
       position: fixed; inset: 0; z-index: 200;
       display: flex; align-items: center; justify-content: center;
-      background: rgba(0,0,0,.6); backdrop-filter: blur(4px);
+      background: rgba(0,0,0,.75); backdrop-filter: blur(6px);
       opacity: 0; pointer-events: none; transition: opacity .3s;
     }
     .celebration.show { opacity: 1; pointer-events: all; }
     .celebration-box {
-      background: linear-gradient(135deg, var(--yellow), var(--orange));
-      border-radius: 24px; padding: 3rem 4rem; text-align: center;
-      font-family: 'Anton', sans-serif; color: var(--navy);
+      background: linear-gradient(135deg, #1a0003, var(--blood));
+      border: 2px solid var(--blood-bright);
+      border-radius: 20px; padding: 3rem 4rem; text-align: center;
       transform: scale(.8); transition: transform .4s cubic-bezier(.34,1.56,.64,1);
-      box-shadow: 0 24px 80px rgba(0,0,0,.5);
+      box-shadow: 0 24px 80px rgba(0,0,0,.7), 0 0 60px var(--blood-glow);
     }
     .celebration.show .celebration-box { transform: scale(1); }
-    .celebration-title { font-size: clamp(3rem, 12vw, 5.5rem); line-height: .9; }
-    .celebration-sub   { font-size: 1rem; opacity: .75; margin-top: .5rem; }
+    .celebration-title {
+      font-family: 'Creepster', cursive;
+      font-size: clamp(3rem, 12vw, 6rem); line-height: .9;
+      color: var(--white); text-shadow: 0 0 30px var(--blood-glow);
+    }
+    .celebration-sub { font-size: 1rem; color: rgba(255,255,255,.7); margin-top: .6rem; letter-spacing: .08em; }
+
     .confetti-wrap { position: fixed; inset: 0; z-index: 150; pointer-events: none; }
     .confetti-piece { position: absolute; top: -20px; border-radius: 2px; animation: fall linear forwards; }
     @keyframes fall { 0%{transform:translateY(0) rotate(0deg);opacity:1} 100%{transform:translateY(110vh) rotate(720deg);opacity:0} }
 
-    /* ─── CALLER SCREEN ──────────────────────────────── */
-    #caller { padding-bottom: 3rem; background: var(--navy); }
+    /* ─── CALLER SCREEN ───────────────────────────── */
+    #caller { padding-bottom: 3rem; background: var(--black); }
     .caller-grid {
       display: grid; grid-template-columns: 1fr 320px;
       gap: 1.25rem; max-width: 1080px; margin: 1.25rem auto; padding: 0 1.25rem;
@@ -283,106 +340,127 @@
     }
     @media(max-width:600px) { .stats-bar { grid-template-columns: repeat(2,1fr); } }
     .stat-block {
-      background: var(--navy-card); border: 1px solid rgba(245,194,0,.12);
-      border-radius: 12px; padding: 1rem; text-align: center;
+      background: var(--dark-card); border: 1px solid rgba(192,0,26,.2);
+      border-radius: 10px; padding: 1rem; text-align: center;
     }
-    .stat-val { font-family: 'Anton', sans-serif; font-size: 2rem; color: var(--yellow); }
-    .stat-lbl { font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin-top: .2rem; }
+    .stat-val { font-family: 'Creepster', cursive; font-size: 2.2rem; color: var(--blood); }
+    .stat-lbl { font-size: .66rem; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); margin-top: .2rem; }
+
     .draw-area { display: flex; flex-direction: column; align-items: center; padding: 2rem 1rem; text-align: center; }
     .draw-display { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
-    .draw-letter-big { font-family: 'Anton', sans-serif; font-size: 3.5rem; color: var(--yellow); }
-    .ball-lg { width: 110px; height: 110px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Anton', sans-serif; font-size: 3rem; transition: transform .3s; }
-    .ball-lg.active { background: var(--orange); color: #fff; box-shadow: 0 0 48px rgba(232,119,34,.5); }
-    .ball-lg.idle   { background: var(--navy-light); color: var(--muted); font-size: 1rem; }
-    .btn-draw {
-      background: linear-gradient(135deg, var(--yellow), #FFD740);
-      color: var(--navy); border: none; border-radius: 12px;
-      font-family: 'Anton', sans-serif; font-size: 1.5rem; letter-spacing: .05em;
-      padding: 1rem 3rem; cursor: pointer; transition: all .2s; box-shadow: 0 4px 22px var(--yellow-glow);
+    .draw-letter-big { font-family: 'Creepster', cursive; font-size: 4rem; color: var(--blood); text-shadow: 0 0 20px var(--blood-glow); }
+
+    .ball-lg {
+      width: 110px; height: 110px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Creepster', cursive; font-size: 3.2rem; transition: transform .3s;
     }
-    .btn-draw:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 32px var(--yellow-glow); }
-    .btn-draw:disabled { background: var(--navy-light); color: var(--muted); box-shadow: none; cursor: not-allowed; }
+    .ball-lg.active { background: var(--blood); color: #fff; box-shadow: 0 0 50px var(--blood-glow); }
+    .ball-lg.idle   { background: var(--dark-light); color: var(--muted); font-size: 1rem; font-family: 'Oswald', sans-serif; }
+
+    .btn-draw {
+      background: var(--blood); color: var(--white);
+      border: none; border-radius: 10px;
+      font-family: 'Creepster', cursive; font-size: 1.8rem; letter-spacing: .08em;
+      padding: .9rem 3rem; cursor: pointer; transition: all .2s;
+      box-shadow: 0 4px 24px var(--blood-glow);
+    }
+    .btn-draw:hover:not(:disabled) { background: var(--blood-bright); transform: translateY(-2px); box-shadow: 0 8px 32px var(--blood-glow); }
+    .btn-draw:disabled { background: var(--dark-light); color: var(--muted); box-shadow: none; cursor: not-allowed; }
+
     .board-cols { display: grid; grid-template-columns: repeat(5, 1fr); gap: .5rem; }
-    .board-col-header { font-family: 'Anton', sans-serif; font-size: 1.1rem; text-align: center; color: var(--yellow); margin-bottom: .35rem; }
+    .board-col-header { font-family: 'Creepster', cursive; font-size: 1.2rem; text-align: center; color: var(--blood); margin-bottom: .35rem; }
     .board-col { display: flex; flex-direction: column; gap: 3px; }
     .board-num {
       width: 100%; aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
-      font-family: 'Anton', sans-serif; font-size: .8rem;
-      background: var(--navy-mid); color: var(--muted);
-      border-radius: 5px; border: 1px solid rgba(255,255,255,.04); transition: all .25s;
+      font-family: 'Oswald', sans-serif; font-weight: 600; font-size: .78rem;
+      background: var(--dark-mid); color: var(--muted);
+      border-radius: 4px; border: 1px solid rgba(255,255,255,.04); transition: all .25s;
     }
-    .board-num.called  { background: rgba(232,119,34,.25); color: var(--orange); border-color: var(--orange-dim); }
-    .board-num.latest  { background: var(--yellow); color: var(--navy); border-color: var(--yellow); box-shadow: 0 0 14px var(--yellow-glow); }
+    .board-num.called { background: rgba(192,0,26,.25); color: var(--blood-bright); border-color: var(--blood-dim); }
+    .board-num.latest { background: var(--blood); color: var(--white); border-color: var(--blood); box-shadow: 0 0 14px var(--blood-glow); }
+
     .player-row {
       display: flex; align-items: center; justify-content: space-between;
-      padding: .65rem .9rem; background: var(--navy-mid); border-radius: 8px;
-      margin-bottom: .4rem; border: 1px solid rgba(255,255,255,.05);
+      padding: .65rem .9rem; background: var(--dark-mid); border-radius: 6px;
+      margin-bottom: .4rem; border: 1px solid rgba(255,255,255,.04);
     }
     .player-row-name { font-weight: 600; font-size: .95rem; }
-    .player-row-card { font-size: .7rem; color: var(--muted); font-family: 'Anton', sans-serif; }
+    .player-row-card { font-size: .68rem; color: var(--muted); letter-spacing: .06em; }
     .badge-live {
-      font-size: .65rem; padding: .18rem .55rem; border-radius: 100px;
-      background: var(--green-dim); color: var(--green);
-      border: 1px solid rgba(34,197,94,.3); font-weight: 700; letter-spacing: .05em;
+      font-size: .62rem; padding: .18rem .55rem; border-radius: 100px;
+      background: var(--green-dim); color: var(--green-evil);
+      border: 1px solid rgba(74,255,106,.25); font-weight: 700; letter-spacing: .06em;
     }
-    .claim-row { padding: .9rem; background: var(--navy-mid); border-radius: 8px; border: 1px solid rgba(245,194,0,.22); margin-bottom: .6rem; }
+
+    .claim-row { padding: .9rem; background: var(--dark-mid); border-radius: 6px; border: 1px solid rgba(192,0,26,.25); margin-bottom: .6rem; }
     .claim-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: .5rem; }
     .claim-name { font-weight: 700; font-size: .95rem; }
-    .claim-time { font-size: .7rem; color: var(--muted); }
-    .claim-patterns { font-size: .75rem; color: var(--muted); margin-bottom: .6rem; }
-    .claim-badge { font-size: .68rem; padding: .18rem .55rem; border-radius: 4px; font-weight: 700; letter-spacing: .05em; }
-    .claim-badge.confirmed { background: var(--green-dim); color: var(--green); }
-    .claim-badge.rejected  { background: var(--red-dim);   color: var(--red);   }
-    .empty-state { text-align: center; padding: 2rem; color: var(--muted); font-size: .9rem; }
+    .claim-time { font-size: .68rem; color: var(--muted); }
+    .claim-patterns { font-size: .73rem; color: var(--muted); margin-bottom: .6rem; }
+    .claim-badge { font-size: .66rem; padding: .18rem .55rem; border-radius: 4px; font-weight: 700; letter-spacing: .06em; }
+    .claim-badge.confirmed { background: var(--green-dim); color: var(--green-evil); }
+    .claim-badge.rejected  { background: var(--blood-dim); color: var(--blood-bright); }
+    .empty-state { text-align: center; padding: 2rem; color: var(--muted); font-size: .88rem; }
 
-    /* ─── VERIFY MODAL ───────────────────────────────── */
+    /* ─── VERIFY MODAL ────────────────────────────── */
     .modal-overlay {
       position: fixed; inset: 0; z-index: 100;
-      background: rgba(0,0,0,.75); backdrop-filter: blur(4px);
+      background: rgba(0,0,0,.82); backdrop-filter: blur(5px);
       display: flex; align-items: center; justify-content: center; padding: 1rem;
     }
     .modal-overlay.hidden { display: none; }
     .modal {
-      background: var(--navy-card); border: 1px solid rgba(245,194,0,.25);
-      border-radius: 20px; padding: 2rem; max-width: 420px; width: 100%; max-height: 90vh; overflow-y: auto;
+      background: var(--dark-card); border: 1px solid rgba(192,0,26,.35);
+      border-radius: 14px; padding: 2rem; max-width: 420px; width: 100%; max-height: 90vh; overflow-y: auto;
+      box-shadow: 0 0 40px rgba(192,0,26,.12);
     }
-    .modal-title { font-family: 'Anton', sans-serif; font-size: 1.6rem; color: var(--yellow); margin-bottom: .3rem; }
-    .modal-sub   { font-size: .85rem; color: var(--muted); margin-bottom: 1.25rem; }
+    .modal-title { font-family: 'Creepster', cursive; font-size: 1.8rem; color: var(--blood); margin-bottom: .3rem; }
+    .modal-sub   { font-size: .83rem; color: var(--muted); margin-bottom: 1.25rem; }
     .verify-result {
-      text-align: center; padding: .75rem 1rem; border-radius: 8px;
+      text-align: center; padding: .75rem 1rem; border-radius: 6px;
       font-weight: 700; font-size: 1rem; margin-bottom: 1rem;
     }
-    .verify-result.valid   { background: var(--green-dim); color: var(--green); border: 1px solid rgba(34,197,94,.3); }
-    .verify-result.invalid { background: var(--red-dim);   color: var(--red);   border: 1px solid rgba(239,68,68,.3); }
+    .verify-result.valid   { background: var(--green-dim); color: var(--green-evil); border: 1px solid rgba(74,255,106,.25); }
+    .verify-result.invalid { background: var(--blood-dim); color: var(--blood-bright); border: 1px solid rgba(192,0,26,.35); }
+
     .mini-letters { display: grid; grid-template-columns: repeat(5,1fr); gap: 3px; margin-bottom: 3px; }
-    .mini-letter-cell { background: var(--yellow); color: var(--navy); font-family: 'Anton', sans-serif; font-size: .85rem; text-align: center; padding: .25rem; border-radius: 4px; }
+    .mini-letter-cell { background: var(--blood); color: var(--white); font-family: 'Creepster', cursive; font-size: .9rem; text-align: center; padding: .25rem; border-radius: 4px; }
     .mini-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 3px; margin-bottom: 1rem; }
     .mini-cell {
       aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
-      background: var(--navy-mid); border-radius: 4px;
-      font-family: 'Anton', sans-serif; font-size: .72rem; border: 1px solid rgba(255,255,255,.05);
+      background: var(--dark-mid); border-radius: 4px;
+      font-family: 'Oswald', sans-serif; font-weight: 600; font-size: .72rem;
+      border: 1px solid rgba(255,255,255,.04);
     }
-    .mini-cell.free    { background: var(--green); color: #fff; font-size: .45rem; letter-spacing: .05em; border-color: var(--green); }
-    .mini-cell.called  { background: rgba(245,194,0,.18); color: var(--yellow); border-color: rgba(245,194,0,.3); }
-    .mini-cell.winning { background: var(--green); color: #fff; border-color: var(--green); }
+    /* On the verify card: grey = untouched, red = player dabbed, green = correctly called & dabbed */
+    .mini-cell.free         { background: var(--dark-light); color: var(--muted); font-size: .45rem; letter-spacing: .05em; }
+    .mini-cell.player-dabbed{ background: var(--blood-dim); color: var(--blood-bright); border-color: var(--blood-dim); }
+    .mini-cell.valid-dab    { background: rgba(74,255,106,.18); color: var(--green-evil); border-color: rgba(74,255,106,.3); }
+    .mini-cell.invalid-dab  { background: var(--blood-dim); color: var(--blood-bright); border-color: rgba(192,0,26,.5);
+                               position: relative; }
+    /* Red X on invalid dabs */
+    .mini-cell.invalid-dab::after {
+      content: '✗'; position: absolute; font-size: 1.1em; color: var(--blood-bright);
+    }
     .modal-actions { display: flex; gap: .6rem; }
     .modal-actions .btn { flex: 1; font-size: .88rem; padding: .6rem .5rem; }
 
-    /* ─── TOAST ──────────────────────────────────────── */
+    /* ─── TOAST ───────────────────────────────────── */
     .toast {
       position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 300;
-      background: var(--navy-card); border: 1px solid rgba(245,194,0,.25);
-      border-radius: 12px; padding: .9rem 1.25rem;
-      font-weight: 600; font-size: .9rem; max-width: 280px;
+      background: var(--dark-card); border: 1px solid rgba(192,0,26,.3);
+      border-radius: 10px; padding: .9rem 1.25rem;
+      font-weight: 600; font-size: .88rem; max-width: 280px;
       transform: translateY(80px); opacity: 0; transition: all .3s; pointer-events: none;
     }
     .toast.show    { transform: translateY(0); opacity: 1; }
-    .toast.success { border-color: rgba(34,197,94,.4); }
-    .toast.error   { border-color: rgba(239,68,68,.4); }
+    .toast.success { border-color: rgba(74,255,106,.4); }
+    .toast.error   { border-color: rgba(192,0,26,.6); }
 
     @media(max-width:440px) {
       .bingo-cell { font-size: 1rem; }
-      .bingo-letter-cell { font-size: 1.2rem; }
+      .bingo-letter-cell { font-size: 1.3rem; }
       .btn-grid { grid-template-columns: 1fr; }
     }
   </style>
@@ -391,22 +469,26 @@
 
 <!-- ══════════════════════ LANDING ══════════════════════ -->
 <div id="landing" class="screen active">
-  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:2rem;text-align:center">
-    <div class="bracket-badge">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6m0-6 6 6"/></svg>
-      March Madness Edition
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:2rem;text-align:center;position:relative;z-index:1">
+
+    <div class="horror-badge">
+      <!-- Skull SVG -->
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a9 9 0 0 1 9 9c0 3.5-2 6.6-5 8.2V21a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1v-1.8C5 17.6 3 14.5 3 11a9 9 0 0 1 9-9zm-2.5 13a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm5 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/></svg>
+      Friday the 13th Edition
     </div>
-    <h1 class="big-title display">KIN<br>BINGO</h1>
-    <p class="march-sub">2025 TOURNAMENT</p>
+
+    <h1 class="big-title spooky">KIN<br>BINGO</h1>
+    <p class="horror-sub">Play if you dare</p>
+
     <div class="landing-form">
       <label class="form-label" for="nameInput">Your Name</label>
       <input id="nameInput" class="form-input" type="text" placeholder="e.g. Kala B." maxlength="30" autocomplete="off">
       <div class="btn-grid">
-        <button class="btn btn-yellow btn-lg" onclick="joinPlayer()">PLAY BINGO</button>
-        <button class="btn btn-ghost btn-lg"  onclick="joinCaller()">HOST GAME</button>
+        <button class="btn btn-blood btn-lg" onclick="joinPlayer()">PLAY BINGO</button>
+        <button class="btn btn-ghost btn-lg" onclick="joinCaller()">HOST GAME</button>
       </div>
       <p class="landing-note">
-        First time? Enter your name and hit <strong style="color:var(--yellow)">Play Bingo</strong>.<br>
+        Enter your name and hit <strong style="color:var(--blood)">Play Bingo</strong> to join.<br>
         Running the game? Click <strong style="color:var(--white)">Host Game</strong>.
       </p>
     </div>
@@ -418,22 +500,23 @@
   <header class="app-header">
     <div class="logo-text">KIN <span>BINGO</span></div>
     <div style="text-align:center">
-      <div style="font-size:.8rem;color:var(--muted)">Playing as</div>
+      <div style="font-size:.75rem;color:var(--muted)">Playing as</div>
       <div style="font-weight:700;font-size:.95rem" id="p-name-display"></div>
     </div>
     <div style="text-align:right">
       <div class="mono-label">Card #</div>
-      <div style="font-family:'Anton',sans-serif;font-size:.95rem;color:var(--yellow)" id="p-card-num"></div>
+      <div style="font-family:'Creepster',cursive;font-size:1rem;color:var(--blood)" id="p-card-num"></div>
     </div>
   </header>
 
   <div id="p-waiting" class="waiting-banner" style="display:none">
     <div class="spinner"></div>
-    <div class="display" style="font-size:1.6rem;color:var(--yellow);margin-bottom:.5rem">WAITING FOR HOST</div>
-    <div style="color:var(--muted);font-size:.95rem">The host hasn't kicked off the game yet. Stand by!</div>
+    <div class="spooky" style="font-size:1.8rem;color:var(--blood);margin-bottom:.5rem;text-shadow:0 0 20px var(--blood-glow)">AWAITING YOUR FATE...</div>
+    <div style="color:var(--muted);font-size:.95rem">The host hasn't started the game yet. Don't wander off.</div>
   </div>
 
   <div id="p-game" style="display:none">
+    <!-- Latest ball -->
     <div class="ball-display">
       <div class="mono-label ball-label">LATEST CALL</div>
       <div style="display:flex;align-items:center;justify-content:center;gap:.4rem">
@@ -442,9 +525,7 @@
       </div>
     </div>
 
-    <!-- Dab prompt — flashes orange when a called number is on your card but undabbed -->
-    <div class="dab-hint" id="dab-hint"></div>
-
+    <!-- Bingo Card — tap any cell to mark it -->
     <div class="bingo-wrapper">
       <div class="bingo-letters">
         <div class="bingo-letter-cell">B</div><div class="bingo-letter-cell">I</div>
@@ -456,8 +537,8 @@
 
     <div class="bingo-btn-wrap">
       <button class="btn-BINGO" id="bingo-btn" disabled onclick="callBingo()">BINGO!</button>
-      <div style="font-size:.72rem;color:var(--muted);text-align:center;margin-top:.6rem">
-        Tap numbers on your card to dab them. Complete a line to call BINGO!
+      <div style="font-size:.7rem;color:var(--muted);text-align:center;margin-top:.6rem">
+        Tap numbers to mark them. Complete a line and call BINGO!
       </div>
     </div>
 
@@ -472,7 +553,7 @@
 
   <div class="celebration" id="celebration">
     <div class="celebration-box">
-      <div class="celebration-title display">BINGO!</div>
+      <div class="celebration-title spooky">BINGO!</div>
       <div class="celebration-sub" id="cel-sub">Waiting for host to verify...</div>
     </div>
   </div>
@@ -482,7 +563,7 @@
 <!-- ══════════════════════ HOST ══════════════════════════ -->
 <div id="caller" class="screen">
   <header class="app-header">
-    <div class="logo-text">KIN <span>BINGO</span> <span style="color:var(--muted);font-size:.8rem;letter-spacing:.06em">HOST</span></div>
+    <div class="logo-text">KIN <span>BINGO</span> <span style="color:var(--muted);font-family:'Oswald',sans-serif;font-size:.75rem;letter-spacing:.08em">HOST</span></div>
     <div style="font-size:.8rem;color:var(--muted)"><span id="c-player-count">0</span> players connected</div>
     <div><button class="btn btn-ghost btn-sm" onclick="resetGame()">NEW GAME</button></div>
   </header>
@@ -498,13 +579,13 @@
     <div>
       <div class="card" style="margin-bottom:1.25rem">
         <div class="draw-area">
-          <div class="mono-label" style="margin-bottom:1rem">DRAW A BALL</div>
+          <div class="mono-label" style="margin-bottom:1rem">DRAW A NUMBER</div>
           <div class="draw-display">
             <span class="draw-letter-big" id="c-draw-letter">—</span>
             <div class="ball-lg idle" id="c-draw-ball"><span id="c-draw-num">?</span></div>
           </div>
-          <button class="btn-draw" id="draw-btn" onclick="drawNumber()">DRAW NUMBER</button>
-          <div style="font-size:.75rem;color:var(--muted);margin-top:.7rem" id="c-remaining-text">75 balls remaining</div>
+          <button class="btn-draw" id="draw-btn" onclick="drawNumber()">DRAW</button>
+          <div style="font-size:.74rem;color:var(--muted);margin-top:.7rem" id="c-remaining-text">75 balls remaining</div>
         </div>
       </div>
       <div class="card">
@@ -528,7 +609,7 @@
 <!-- ══════════════════════ VERIFY MODAL ═════════════════ -->
 <div class="modal-overlay hidden" id="verify-modal">
   <div class="modal">
-    <div class="modal-title display">VERIFY BINGO</div>
+    <div class="modal-title spooky">VERIFY BINGO</div>
     <div class="modal-sub" id="m-player-info"></div>
     <div id="m-result"></div>
     <div class="mini-letters">
@@ -537,7 +618,11 @@
       <div class="mini-letter-cell">O</div>
     </div>
     <div class="mini-grid" id="m-card"></div>
-    <div style="font-size:.75rem;color:var(--muted);margin-bottom:1rem" id="m-patterns"></div>
+    <div style="font-size:.72rem;color:var(--muted);margin-bottom:1rem" id="m-legend">
+      <span style="color:var(--green-evil)">■</span> Valid dab &nbsp;
+      <span style="color:var(--blood-bright)">■</span> Marked but NOT called (invalid)
+    </div>
+    <div style="font-size:.73rem;color:var(--muted);margin-bottom:1rem" id="m-patterns"></div>
     <div class="modal-actions">
       <button class="btn btn-green" onclick="confirmBingo(true)">CONFIRM</button>
       <button class="btn btn-red"   onclick="confirmBingo(false)">REJECT</button>
@@ -570,7 +655,7 @@ let myId        = '';
 let myCardNum   = '';
 let myCard      = [];
 let calledNums  = [];
-let myDabbed    = new Set(); // card indices manually dabbed by player (index 12 = FREE, always in)
+let myDabbed    = new Set(); // index 12 = FREE, always in
 let verifyClaim = null;
 let bingoCalled = false;
 
@@ -617,20 +702,20 @@ const PATTERNS = {
   'Star ⭐':     [0,4,12,20,24],
 };
 
-// Player win check — uses manually dabbed indices (FREE at 12 always counts)
+// Player side — based purely on what they dabbed
 function checkBingoByDabbed(dabbedSet) {
-  const effective = new Set([...dabbedSet, 12]);
+  const eff = new Set([...dabbedSet, 12]);
   return Object.entries(PATTERNS)
-    .filter(([,idxs]) => idxs.every(i => effective.has(i)))
+    .filter(([,idxs]) => idxs.every(i => eff.has(i)))
     .map(([name, indices]) => ({ name, indices }));
 }
 
-// Host verification — checks against full called list regardless of dabbing
+// Host side — checks called numbers as source of truth
 function checkBingoByCalledNums(card, called) {
   const cs = new Set(called);
-  const marked = new Set(card.reduce((acc, v, i) => {
-    if (v === 'FREE' || cs.has(v)) acc.push(i); return acc;
-  }, []));
+  const marked = new Set(card.reduce((acc,v,i) => {
+    if (v==='FREE'||cs.has(v)) acc.push(i); return acc;
+  },[]));
   return Object.entries(PATTERNS)
     .filter(([,idxs]) => idxs.every(i => marked.has(i)))
     .map(([name, indices]) => ({ name, indices }));
@@ -643,7 +728,7 @@ function showScreen(toId) {
   window.scrollTo(0, 0);
 }
 
-/* ── PERSIST DABBED STATE ────────────────────────────── */
+/* ── PERSIST DABBED ──────────────────────────────────── */
 function saveDabbed() {
   const key = 'kinBingo_' + myName;
   const s   = JSON.parse(sessionStorage.getItem(key) || '{}');
@@ -720,58 +805,53 @@ function renderPlayerCard() {
   refreshCardDisplay();
 }
 
+// Players can tap ANY cell — no restriction on whether it's been called
 function dabCell(idx) {
-  const val = myCard[idx];
-  if (val === 'FREE' || myDabbed.has(idx)) return;
-  if (!new Set(calledNums).has(val)) {
-    showToast(`${val} hasn't been called yet!`, 'error');
+  if (myCard[idx] === 'FREE') return;
+  if (myDabbed.has(idx)) {
+    // Allow un-dabbing too — tap again to remove mark
+    myDabbed.delete(idx);
+    saveDabbed();
+    refreshCardDisplay();
     return;
   }
   myDabbed.add(idx);
   saveDabbed();
   refreshCardDisplay();
-  refreshChips();
+
   const wins = checkBingoByDabbed(myDabbed);
   if (wins.length > 0 && !bingoCalled) {
     $('bingo-btn').disabled = false;
-    showToast('BINGO! Hit the button!', 'success');
   }
 }
 
 function refreshCardDisplay() {
-  const calledSet = new Set(calledNums);
-  const wins      = checkBingoByDabbed(myDabbed);
-  const winIdxs   = new Set(wins.flatMap(w => w.indices));
-  let undabbed    = 0;
+  // No hints — we only visually distinguish: dabbed vs not dabbed
+  // Called numbers look IDENTICAL to uncalled numbers
+  const wins    = checkBingoByDabbed(myDabbed);
+  const winIdxs = new Set(wins.flatMap(w => w.indices));
 
   myCard.forEach((val, i) => {
     const cell = $('pc-' + i); if (!cell || val === 'FREE') return;
-    const isCalled  = calledSet.has(val);
     const isDabbed  = myDabbed.has(i);
-    const isWinning = winIdxs.has(i);
+    const isWinning = winIdxs.has(i) && isDabbed;
 
     cell.className = 'bingo-cell';
-    if      (isWinning && isDabbed) cell.classList.add('winning');
-    else if (isDabbed)              cell.classList.add('dabbed');
-    else if (isCalled)              { cell.classList.add('available'); undabbed++; }
+    if      (isWinning) cell.classList.add('winning');
+    else if (isDabbed)  { cell.classList.add('dabbed'); cell.textContent = '✕'; }
+    else                cell.textContent = val; // restore number if un-dabbed
   });
-
-  const hint = $('dab-hint');
-  if (hint) hint.textContent = undabbed > 0 ? `TAP ${undabbed} number${undabbed > 1 ? 's' : ''} on your card to dab!` : '';
 
   if (!bingoCalled) $('bingo-btn').disabled = wins.length === 0;
 }
 
 function refreshChips() {
-  const cardSet   = new Set(myCard.filter(v => v !== 'FREE'));
   const container = $('p-chips');
   container.innerHTML = '';
+  // All chips look the same — no color hints about whether it's on their card
   [...calledNums].reverse().forEach(n => {
-    const idx  = myCard.indexOf(n);
     const chip = document.createElement('div');
-    if (cardSet.has(n) && idx >= 0 && myDabbed.has(idx)) chip.className = 'chip dabbed';
-    else if (cardSet.has(n))                              chip.className = 'chip available';
-    else                                                  chip.className = 'chip';
+    chip.className = 'chip';
     chip.textContent = n;
     container.appendChild(chip);
   });
@@ -780,7 +860,7 @@ function refreshChips() {
 
 function showBall(num) {
   const ball = $('p-ball');
-  ball.className = 'ball orange';
+  ball.className = 'ball active';
   $('p-ball-letter').textContent = letterFor(num) + '-';
   $('p-ball-num').textContent = num;
   ball.style.transform = 'scale(1.3)';
@@ -798,7 +878,7 @@ function listenAsPlayer() {
     const data = snap.val();
     calledNums = data ? Object.values(data) : [];
     if (calledNums.length > 0) showBall(calledNums[calledNums.length - 1]);
-    refreshCardDisplay();
+    // NO refreshCardDisplay here — called numbers don't affect card visuals
     refreshChips();
   });
 
@@ -824,7 +904,7 @@ function listenAsPlayer() {
 
 function callBingo() {
   const wins = checkBingoByDabbed(myDabbed);
-  if (!wins.length) { showToast('No winning pattern yet!', 'error'); return; }
+  if (!wins.length) { showToast('No complete line yet!', 'error'); return; }
   bingoCalled = true;
   $('bingo-btn').disabled = true;
 
@@ -851,10 +931,10 @@ function buildCallerBoard() {
     const col = document.createElement('div'); col.className = 'board-col';
     const hdr = document.createElement('div'); hdr.className = 'board-col-header'; hdr.textContent = letter;
     col.appendChild(hdr);
-    const [lo, hi] = [[1,15],[16,30],[31,45],[46,60],[61,75]][ci];
+    const [lo,hi] = [[1,15],[16,30],[31,45],[46,60],[61,75]][ci];
     for (let n = lo; n <= hi; n++) {
       const chip = document.createElement('div');
-      chip.className = 'board-num'; chip.id = 'bn-' + n; chip.textContent = n;
+      chip.className = 'board-num'; chip.id = 'bn-'+n; chip.textContent = n;
       col.appendChild(chip);
     }
     board.appendChild(col);
@@ -862,9 +942,9 @@ function buildCallerBoard() {
 }
 
 function refreshCallerBoard() {
-  const cs = new Set(calledNums); const latest = calledNums[calledNums.length - 1];
+  const cs = new Set(calledNums); const latest = calledNums[calledNums.length-1];
   for (let n = 1; n <= 75; n++) {
-    const c = $('bn-' + n); if (!c) continue;
+    const c = $('bn-'+n); if (!c) continue;
     c.classList.remove('called','latest');
     if (n === latest) c.classList.add('latest');
     else if (cs.has(n)) c.classList.add('called');
@@ -875,11 +955,12 @@ function refreshCallerStats() {
   const cnt = calledNums.length;
   $('s-called').textContent    = cnt;
   $('s-remaining').textContent = 75 - cnt;
-  $('c-remaining-text').textContent = `${75 - cnt} balls remaining`;
+  $('c-remaining-text').textContent = `${75-cnt} balls remaining`;
 }
 
 function drawNumber() {
-  const remaining = []; const cs = new Set(calledNums);
+  const cs = new Set(calledNums);
+  const remaining = [];
   for (let n = 1; n <= 75; n++) if (!cs.has(n)) remaining.push(n);
   if (!remaining.length) { showToast('All 75 numbers called!', 'error'); return; }
 
@@ -896,6 +977,7 @@ function drawNumber() {
   $('c-draw-num').textContent = num; $('c-draw-letter').textContent = letter;
   ball.style.transform = 'scale(1.2)';
   setTimeout(() => ball.style.transform = 'scale(1)', 300);
+
   if (remaining.length === 1) $('draw-btn').disabled = true;
   showToast(`Called: ${letter}-${num}`, 'success');
 }
@@ -914,7 +996,7 @@ function listenAsCaller() {
     calledNums = data ? Object.values(data) : [];
     refreshCallerBoard(); refreshCallerStats();
     if (calledNums.length > 0) {
-      const n = calledNums[calledNums.length - 1];
+      const n = calledNums[calledNums.length-1];
       $('c-draw-ball').className = 'ball-lg active';
       $('c-draw-num').textContent = n; $('c-draw-letter').textContent = letterFor(n);
     }
@@ -922,8 +1004,8 @@ function listenAsCaller() {
 
   db.ref('bingoClaims').on('value', snap => {
     const data   = snap.val() || {};
-    const claims = Object.entries(data).map(([id,v]) => ({id,...v})).sort((a,b) => b.timestamp - a.timestamp);
-    $('s-claims').textContent = claims.filter(c => c.status === 'pending').length;
+    const claims = Object.entries(data).map(([id,v])=>({id,...v})).sort((a,b)=>b.timestamp-a.timestamp);
+    $('s-claims').textContent = claims.filter(c=>c.status==='pending').length;
     renderClaims(claims);
   });
 }
@@ -943,7 +1025,7 @@ function renderClaims(claims) {
   if (!claims.length) { el.innerHTML = '<div class="empty-state">No claims yet.</div>'; return; }
   el.innerHTML = claims.map(c => {
     const actions = c.status === 'pending'
-      ? `<button class="btn btn-yellow btn-sm" onclick="openVerify('${c.id}')">VERIFY</button>`
+      ? `<button class="btn btn-blood btn-sm" onclick="openVerify('${c.id}')">VERIFY</button>`
       : `<span class="claim-badge ${c.status}">${c.status.toUpperCase()}</span>`;
     return `<div class="claim-row">
       <div class="claim-head">
@@ -955,32 +1037,42 @@ function renderClaims(claims) {
   }).join('');
 }
 
+/* ── Verify modal ────────────────────────────────────── */
 function openVerify(claimId) {
   db.ref('bingoClaims/' + claimId).once('value', snap => {
     const claim = snap.val(); if (!claim) return;
     verifyClaim = { id: claimId, ...claim };
     $('m-player-info').textContent = `${claim.playerName} · Card #${claim.cardNum||'?'}`;
 
-    const wins    = checkBingoByCalledNums(claim.card, calledNums);
-    const winIdxs = new Set(wins.flatMap(w => w.indices));
-    const calledS = new Set(calledNums);
-    const isValid = wins.length > 0;
+    // Host truth: which numbers were actually called
+    const calledSet  = new Set(calledNums);
+    const wins       = checkBingoByCalledNums(claim.card, calledNums);
+    const winIdxs    = new Set(wins.flatMap(w => w.indices));
+    const isValid    = wins.length > 0;
+    const dabbedIdxs = new Set(claim.dabbed || []);
 
     $('m-result').innerHTML = `<div class="verify-result ${isValid?'valid':'invalid'}">
-      ${isValid ? '✓ VALID BINGO — ' + wins.map(w=>w.name).join(', ') : '✗ INVALID — no winning pattern found'}
+      ${isValid ? '✓ VALID BINGO — ' + wins.map(w=>w.name).join(', ')
+                : '✗ INVALID — card has uncalled numbers marked'}
     </div>`;
     $('m-patterns').textContent = `Player claimed: ${(claim.patterns||[]).join(', ')}`;
 
-    const dabbedIdxs = new Set(claim.dabbed || []);
+    // Build mini card — color shows host what player actually dabbed vs what's valid
     const grid = $('m-card'); grid.innerHTML = '';
     claim.card.forEach((val, i) => {
       const cell = document.createElement('div'); cell.className = 'mini-cell';
-      if (val === 'FREE')                           { cell.classList.add('free');    cell.textContent = 'FREE'; }
-      else if (winIdxs.has(i) && calledS.has(val)) { cell.classList.add('winning'); cell.textContent = val; }
-      else if (dabbedIdxs.has(i))                  { cell.classList.add('called');  cell.textContent = val; }
-      else                                          {                                cell.textContent = val; }
+      if (val === 'FREE') {
+        cell.classList.add('free'); cell.textContent = 'FREE';
+      } else if (dabbedIdxs.has(i)) {
+        const numCalled = calledSet.has(val);
+        cell.classList.add(numCalled ? 'valid-dab' : 'invalid-dab');
+        cell.textContent = numCalled ? val : val;
+      } else {
+        cell.textContent = val;
+      }
       grid.appendChild(cell);
     });
+
     $('verify-modal').classList.remove('hidden');
   });
 }
@@ -1005,12 +1097,15 @@ function resetGame() {
   showToast('New game started! Ask players to refresh.', 'success');
 }
 
+/* ── Confetti (blood red themed) ─────────────────────── */
 function spawnConfetti() {
-  const wrap = $('confetti'); const colors = ['#F5C200','#E87722','#22C55E','#3B82F6','#EF4444','#fff'];
+  const wrap = $('confetti');
+  const colors = ['#C0001A','#E8001F','#4AFF6A','#fff','#8B0000','#ff6060'];
   wrap.innerHTML = '';
-  for (let i = 0; i < 60; i++) {
+  for (let i = 0; i < 70; i++) {
     const p = document.createElement('div'); p.className = 'confetti-piece';
-    p.style.cssText = [`left:${Math.random()*100}vw`,`background:${colors[Math.floor(Math.random()*colors.length)]}`,
+    p.style.cssText = [`left:${Math.random()*100}vw`,
+      `background:${colors[Math.floor(Math.random()*colors.length)]}`,
       `width:${5+Math.random()*8}px`,`height:${10+Math.random()*12}px`,
       `animation-duration:${2+Math.random()*3}s`,`animation-delay:${Math.random()*0.6}s`,
       `border-radius:${Math.random()>.5?'50%':'2px'}`].join(';');
@@ -1019,6 +1114,7 @@ function spawnConfetti() {
   setTimeout(() => wrap.innerHTML = '', 6000);
 }
 
+/* ── Toast ───────────────────────────────────────────── */
 function showToast(msg, type='') {
   const t = $('toast'); t.textContent = msg;
   t.className = 'toast show ' + type;
