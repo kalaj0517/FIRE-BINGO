@@ -293,12 +293,12 @@
     .chips-row { display: flex; flex-wrap: wrap; gap: 5px; }
     .chip {
       display: inline-flex; align-items: center; justify-content: center;
-      width: 34px; height: 34px; border-radius: 50%;
-      font-family: 'Oswald', sans-serif; font-weight: 600; font-size: .82rem;
+      height: 34px; padding: 0 .6rem; border-radius: 100px;
+      font-family: 'Oswald', sans-serif; font-weight: 600; font-size: .78rem;
       background: var(--dark-light); color: var(--muted);
-      border: 1px solid rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.06); white-space: nowrap;
     }
-    /* All chips same — no color differentiation for players */
+    .chip .chip-letter { color: var(--blood); margin-right: 2px; font-size: .7rem; }
 
     /* Celebration */
     .celebration {
@@ -367,6 +367,16 @@
     }
     .btn-draw:hover:not(:disabled) { background: var(--blood-bright); transform: translateY(-2px); box-shadow: 0 8px 32px var(--blood-glow); }
     .btn-draw:disabled { background: var(--dark-light); color: var(--muted); box-shadow: none; cursor: not-allowed; }
+
+    .btn-copy-slack {
+      background: transparent; color: var(--muted);
+      border: 1px dashed rgba(255,255,255,.2); border-radius: 6px;
+      font-family: 'Oswald', sans-serif; font-size: .78rem; font-weight: 600;
+      letter-spacing: .08em; text-transform: uppercase;
+      padding: .5rem 1.2rem; cursor: pointer; transition: all .2s;
+    }
+    .btn-copy-slack:hover { border-color: var(--blood); color: var(--white); }
+    .btn-copy-slack.copied { border-color: var(--green-evil); color: var(--green-evil); }
 
     .board-cols { display: grid; grid-template-columns: repeat(5, 1fr); gap: .5rem; }
     .board-col-header { font-family: 'Creepster', cursive; font-size: 1.2rem; text-align: center; color: var(--blood); margin-bottom: .35rem; }
@@ -482,7 +492,7 @@
 
     <div class="landing-form">
       <label class="form-label" for="nameInput">Your Name</label>
-      <input id="nameInput" class="form-input" type="text" placeholder="e.g. Kinberly" maxlength="30" autocomplete="off">
+      <input id="nameInput" class="form-input" type="text" placeholder="e.g. Kala B." maxlength="30" autocomplete="off">
       <div class="btn-grid">
         <button class="btn btn-blood btn-lg" onclick="joinPlayer()">PLAY BINGO</button>
         <button class="btn btn-ghost btn-lg" onclick="joinCaller()">HOST GAME</button>
@@ -586,6 +596,9 @@
           </div>
           <button class="btn-draw" id="draw-btn" onclick="drawNumber()">DRAW</button>
           <div style="font-size:.74rem;color:var(--muted);margin-top:.7rem" id="c-remaining-text">75 balls remaining</div>
+          <button class="btn-copy-slack" id="copy-slack-btn" onclick="copyForSlack()" style="margin-top:1rem;display:none">
+            📋 Copy Called Numbers for Slack
+          </button>
         </div>
       </div>
       <div class="card">
@@ -848,11 +861,11 @@ function refreshCardDisplay() {
 function refreshChips() {
   const container = $('p-chips');
   container.innerHTML = '';
-  // All chips look the same — no color hints about whether it's on their card
+  // Show most recent first, with letter prefix (e.g. N-44) so players can cross-check
   [...calledNums].reverse().forEach(n => {
     const chip = document.createElement('div');
     chip.className = 'chip';
-    chip.textContent = n;
+    chip.innerHTML = `<span class="chip-letter">${letterFor(n)}</span>${n}`;
     container.appendChild(chip);
   });
   $('p-called-count').textContent = `${calledNums.length} / 75`;
@@ -969,9 +982,7 @@ function drawNumber() {
 
   db.ref('game/calledNumbers').push(num);
   db.ref('game/status').set('playing');
-
-  calledNums.push(num);
-  refreshCallerBoard(); refreshCallerStats();
+  // No local push — Firebase listener handles the update to keep count accurate
 
   const ball = $('c-draw-ball'); ball.className = 'ball-lg active';
   $('c-draw-num').textContent = num; $('c-draw-letter').textContent = letter;
@@ -999,6 +1010,7 @@ function listenAsCaller() {
       const n = calledNums[calledNums.length-1];
       $('c-draw-ball').className = 'ball-lg active';
       $('c-draw-num').textContent = n; $('c-draw-letter').textContent = letterFor(n);
+      $('copy-slack-btn').style.display = 'inline-block';
     }
   });
 
@@ -1114,7 +1126,36 @@ function spawnConfetti() {
   setTimeout(() => wrap.innerHTML = '', 6000);
 }
 
-/* ── Toast ───────────────────────────────────────────── */
+/* ── Copy for Slack ──────────────────────────────────── */
+function copyForSlack() {
+  if (!calledNums.length) return;
+
+  // Group numbers by letter
+  const groups = { B:[], I:[], N:[], G:[], O:[] };
+  calledNums.forEach(n => groups[letterFor(n)].push(n));
+
+  const lines = Object.entries(groups)
+    .filter(([,nums]) => nums.length > 0)
+    .map(([letter, nums]) => `*${letter}:* ${nums.sort((a,b)=>a-b).join(', ')}`);
+
+  const text = [
+    `🎃 *KIN BINGO — Called Numbers (${calledNums.length}/75)*`,
+    '',
+    ...lines,
+    '',
+    `_Last called: *${letterFor(calledNums[calledNums.length-1])}-${calledNums[calledNums.length-1]}*_`
+  ].join('\n');
+
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = $('copy-slack-btn');
+    btn.textContent = '✓ Copied! Paste into Slack';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = '📋 Copy Called Numbers for Slack';
+      btn.classList.remove('copied');
+    }, 2500);
+  }).catch(() => showToast('Copy failed — try again', 'error'));
+}
 function showToast(msg, type='') {
   const t = $('toast'); t.textContent = msg;
   t.className = 'toast show ' + type;
