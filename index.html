@@ -3,438 +3,475 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KIN BINGO — Summer Edition</title>
+  <title>KIN BINGO: Hurricane Season</title>
   <link rel="stylesheet" href="https://brand.kin.insure/tokens.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
   <style>
     /* ══════════════════════════════════════════════════
-       SUMMER EDITION COLOR TOKENS
+       HURRICANE SEASON: STORM RADAR TOKENS
+       Kin approved pairing #8: Blue-1000 ground / White
+       foreground / Yellow-600 containers + logo ink.
+       All values from the Kin 10-step scales.
     ══════════════════════════════════════════════════ */
     :root {
-      --coral:        #FF6B35;
-      --coral-bright: #EA580C;
-      --coral-glow:   rgba(255,107,53,0.35);
-      --coral-dim:    rgba(255,107,53,0.18);
-      --ocean:        #0EA5E9;
-      --ocean-dim:    rgba(14,165,233,0.18);
-      --sun:          #FDE047;
-      --sun-glow:     rgba(253,224,71,0.40);
-      --lime:         #84CC16;
-      --lime-dim:     rgba(132,204,22,0.15);
-      --sand:         #FFFBEB;
-      --soft-white:   #FFFFFF;
-      --card-bg:      #FFFFFF;
-      --card-mid:     #FFF7ED;
-      --card-dark:    #FEE2CE;
-      --card-border:  #FDDDC8;
-      --text-dark:    #1C1917;
-      --text-mid:     #57534E;
-      --muted:        #A8A29E;
-      --aqua:         #67E8F9;
-      --peach:        #FED7AA;
+      /* Core */
+      --kin-yellow:     #ffc857;  /* Yellow-600, the lightning */
+      --yellow-500:     #ffd48a;
+      --yellow-300:     #ffebcd;
+      --yellow-200:     #fff5e7;
+      --warm-black:     #242221;
+      --neutral-1000:   #12120f;
+      --white:          #ffffff;
+      /* Storm blues */
+      --storm-1000:     #102e5b;  /* page ground */
+      --storm-900:      #184589;
+      --storm-800:      #1d54a8;
+      --storm-600:      #266dd9;
+      --storm-500:      #5883dd;
+      --storm-400:      #8fa7e5;  /* fine print,  5.64:1 on ground */
+      --storm-300:      #b6c4ed;  /* labels,      7.74:1 on ground */
+      --storm-200:      #d6def4;
+      /* Functional */
+      --alert:          #aa1e1f;  /* Red-600, warning / invalid */
+      --alert-500:      #b45656;
+      --clear:          #277540;  /* Green-600, valid / winning */
+      --clear-500:      #598965;
+      /* Derived surfaces (opacity over ground, no invented hexes) */
+      --panel:          rgba(255,255,255,0.055);
+      --panel-hi:       rgba(255,255,255,0.10);
+      --edge:           rgba(255,255,255,0.14);
+      --edge-hi:        rgba(255,200,87,0.38);
+      --lightning-glow: rgba(255,200,87,0.34);
+      --lightning-dim:  rgba(255,200,87,0.14);
+      --storm-glow:     rgba(38,109,217,0.30);
+
+      --kin-font: 'Inter', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      background: #FFF7ED;
-      color: var(--text-dark);
-      font-family: 'Nunito', sans-serif;
+      background: var(--storm-1000);
+      color: var(--white);
+      font-family: var(--kin-font);
+      font-size: 16px; line-height: 1.6;
       min-height: 100vh;
       overflow-x: hidden;
     }
-    /* Warm summer sky gradient + glowing accents */
+    /* Storm bands + pressure centers */
     body::before {
       content: '';
       position: fixed; inset: 0; z-index: 0; pointer-events: none;
       background:
-        radial-gradient(ellipse 70% 40% at 50% 0%, rgba(14,165,233,0.18) 0%, transparent 60%),
-        radial-gradient(ellipse 50% 30% at 10% 80%, rgba(255,107,53,0.12) 0%, transparent 60%),
-        radial-gradient(ellipse 50% 30% at 90% 70%, rgba(253,224,71,0.12) 0%, transparent 60%),
-        radial-gradient(ellipse 40% 20% at 80% 10%, rgba(103,232,249,0.15) 0%, transparent 50%);
+        radial-gradient(ellipse 65% 45% at 50% -5%,  rgba(38,109,217,0.38) 0%, transparent 62%),
+        radial-gradient(ellipse 45% 30% at 12% 85%,  rgba(24,69,137,0.55)  0%, transparent 60%),
+        radial-gradient(ellipse 45% 30% at 88% 72%,  rgba(255,200,87,0.07) 0%, transparent 58%),
+        radial-gradient(ellipse 30% 18% at 78% 8%,   rgba(88,131,221,0.22) 0%, transparent 55%);
     }
-    /* Sunset stripe at top */
+    /* Watch/warning stripe */
     body::after {
       content: '';
-      position: fixed; top: 0; left: 0; right: 0; z-index: 0;
-      height: 5px;
-      background: linear-gradient(90deg, var(--coral), var(--sun), var(--ocean), var(--lime), var(--coral));
+      position: fixed; top: 0; left: 0; right: 0; z-index: 60;
+      height: 4px;
+      background: linear-gradient(90deg, var(--storm-600), var(--kin-yellow), var(--alert), var(--kin-yellow), var(--storm-600));
+      background-size: 250% 100%;
+      animation: band-drift 14s linear infinite;
       pointer-events: none;
     }
+    @keyframes band-drift { from { background-position: 0% 0; } to { background-position: 250% 0; } }
+
     /* ── PAGE TRANSITIONS ─────────────────────────── */
     .screen { display: none; }
-    .screen.active {
-      display: block;
-      animation: pageIn .4s cubic-bezier(.4,0,.2,1) both;
-    }
-    @keyframes pageIn {
-      from { opacity: 0; transform: translateY(22px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
+    .screen.active { display: block; animation: pageIn .4s cubic-bezier(.4,0,.2,1) both; }
+    @keyframes pageIn { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: translateY(0); } }
+
     /* ─── TYPOGRAPHY ──────────────────────────────── */
-    .fresh      { font-family: 'Fredoka One', cursive; letter-spacing: 0.02em; }
-    .mono-label { font-size: 0.68rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); }
+    .display-hd  { font-weight: 900; letter-spacing: -.03em; line-height: .9; }
+    .mono-label   { font-size: .72rem; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--storm-300); }
+    .fine         { font-size: .78rem; color: var(--storm-400); }
+
     /* ─── SHARED COMPONENTS ───────────────────────── */
     .card {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
+      background: var(--panel);
+      border: 1px solid var(--edge);
       border-radius: 16px; padding: 1.4rem;
-      box-shadow: 0 2px 12px rgba(0,0,0,.06);
+      backdrop-filter: blur(8px);
+      box-shadow: 0 2px 18px rgba(0,0,0,.28);
     }
     .btn {
       border: none; border-radius: 8px; cursor: pointer;
-      font-family: 'Nunito', sans-serif; font-weight: 800;
-      letter-spacing: 0.06em; text-transform: uppercase;
+      font-family: var(--kin-font); font-weight: 700;
+      letter-spacing: .04em;
       transition: all .15s; outline: none;
     }
-    .btn:disabled { opacity: .3; cursor: not-allowed; transform: none !important; }
-    .btn-spring {
-      background: var(--coral); color: var(--soft-white);
-      box-shadow: 0 4px 14px var(--coral-glow);
+    .btn:disabled { opacity: .32; cursor: not-allowed; transform: none !important; }
+    .btn-storm {
+      background: var(--kin-yellow); color: var(--neutral-1000);
+      box-shadow: 0 4px 16px var(--lightning-glow);
     }
-    .btn-spring:hover:not(:disabled) {
-      background: var(--coral-bright); transform: translateY(-2px);
-      box-shadow: 0 6px 22px var(--coral-glow);
-    }
-    .btn-ghost {
-      background: transparent; color: var(--text-mid);
-      border: 1px solid var(--card-border);
-    }
-    .btn-ghost:hover:not(:disabled) { border-color: var(--coral); color: var(--coral); }
-    .btn-green { background: var(--lime); color: #fff; }
-    .btn-green:hover:not(:disabled) { background: #65A30D; transform: translateY(-2px); }
-    .btn-red   { background: #EF4444; color: #fff; }
-    .btn-red:hover:not(:disabled)   { background: #DC2626; transform: translateY(-2px); }
-    .btn-lg { font-size: 1.1rem; padding: .85rem 2rem; }
-    .btn-sm { font-size: .75rem; padding: .32rem .7rem; border-radius: 6px; }
+    .btn-storm:hover:not(:disabled) { background: var(--yellow-500); transform: translateY(-2px); box-shadow: 0 6px 24px var(--lightning-glow); }
+    .btn-ghost { background: transparent; color: var(--storm-200); border: 1px solid var(--edge); }
+    .btn-ghost:hover:not(:disabled) { border-color: var(--kin-yellow); color: var(--kin-yellow); }
+    .btn-green { background: var(--clear); color: var(--white); }
+    .btn-green:hover:not(:disabled) { background: var(--clear-500); transform: translateY(-2px); }
+    .btn-red   { background: var(--alert); color: var(--white); }
+    .btn-red:hover:not(:disabled)   { background: var(--alert-500); transform: translateY(-2px); }
+    .btn-lg { font-size: 1rem; padding: .85rem 1.6rem; }
+    .btn-sm { font-size: .75rem; padding: .34rem .75rem; border-radius: 6px; }
+
     /* ─── HEADER ──────────────────────────────────── */
     .app-header {
       display: flex; align-items: center; justify-content: space-between;
       padding: .9rem 1.5rem;
-      background: rgba(255,255,255,0.92); backdrop-filter: blur(10px);
-      border-bottom: 2px solid var(--card-border);
-      box-shadow: 0 2px 16px rgba(0,0,0,.06);
+      background: rgba(16,46,91,0.82); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--edge);
+      box-shadow: 0 2px 20px rgba(0,0,0,.35);
       position: sticky; top: 0; z-index: 50;
     }
-    .logo-text {
-      font-family: 'Fredoka One', cursive; font-size: 1.6rem;
-      color: var(--coral); letter-spacing: 0.04em;
-    }
-    .logo-text span { color: var(--ocean); }
+    .logo-text { font-weight: 900; font-size: 1.4rem; letter-spacing: -.02em; color: var(--kin-yellow); }
+    .logo-text span { color: var(--white); }
+    .logo-text .host-tag { color: var(--storm-300); font-size: .7rem; font-weight: 700; letter-spacing: .14em; }
+
     /* ─── LANDING ─────────────────────────────────── */
-    #landing {
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      min-height: 100vh; padding: 2rem; text-align: center;
-    }
-    .spring-badge {
+    .storm-badge {
       display: inline-flex; align-items: center; gap: .5rem;
-      background: linear-gradient(135deg, var(--coral), #f97316);
-      color: var(--soft-white);
-      font-family: 'Nunito', sans-serif; font-weight: 800;
-      font-size: .72rem; letter-spacing: .2em;
-      padding: .35rem 1.1rem; border-radius: 100px;
+      background: var(--alert); color: var(--white);
+      font-weight: 700; font-size: .72rem; letter-spacing: .18em;
+      padding: .4rem 1.1rem; border-radius: 100px;
       margin-bottom: 1.4rem; text-transform: uppercase;
-      box-shadow: 0 4px 14px var(--coral-glow);
+      box-shadow: 0 4px 16px rgba(170,30,31,.45);
     }
+    .storm-badge .spin-ico { display: inline-block; animation: slow-spin 6s linear infinite; }
+    @keyframes slow-spin { to { transform: rotate(360deg); } }
     .big-title {
-      font-family: 'Fredoka One', cursive;
-      font-size: clamp(4.5rem, 13vw, 9rem);
-      line-height: .88;
-      color: var(--coral);
-      text-shadow: 3px 3px 0 rgba(255,107,53,.2);
-      margin-bottom: .5rem;
+      font-weight: 900; letter-spacing: -.04em;
+      font-size: clamp(4rem, 12vw, 8.5rem); line-height: .86;
+      color: var(--white);
+      text-shadow: 0 0 44px rgba(38,109,217,.75);
+      margin-bottom: .6rem;
     }
-    .spring-sub {
-      font-family: 'Nunito', sans-serif; font-weight: 800;
-      font-size: clamp(.9rem, 2.5vw, 1.3rem); letter-spacing: .25em;
-      color: var(--muted); margin-bottom: 2.5rem;
-      text-transform: uppercase;
+    .big-title em { font-style: normal; color: var(--kin-yellow); text-shadow: 0 0 40px var(--lightning-glow); }
+    .storm-sub {
+      font-weight: 600; font-size: clamp(.85rem, 2.4vw, 1.1rem);
+      letter-spacing: .22em; text-transform: uppercase;
+      color: var(--storm-300); margin-bottom: 2.4rem;
     }
     .landing-form {
       max-width: 400px; width: 100%;
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
+      background: var(--panel); border: 1px solid var(--edge);
       border-radius: 20px; padding: 2rem;
-      box-shadow: 0 16px 48px rgba(0,0,0,.1), 0 0 0 4px rgba(255,107,53,.06);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 18px 52px rgba(0,0,0,.45);
     }
-    .form-label {
-      display: block; font-size: .72rem; letter-spacing: .18em;
-      text-transform: uppercase; color: var(--muted); margin-bottom: .45rem;
-    }
+    .form-label { display: block; font-size: .72rem; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--storm-300); margin-bottom: .45rem; }
     .form-input {
-      width: 100%; background: var(--card-mid);
-      border: 1.5px solid var(--card-border); border-radius: 8px;
-      padding: .8rem 1rem; color: var(--text-dark);
-      font-family: 'Nunito', sans-serif; font-size: 1.1rem; font-weight: 700;
+      width: 100%; background: rgba(0,0,0,.28);
+      border: 1.5px solid var(--edge); border-radius: 8px;
+      padding: .8rem 1rem; color: var(--white);
+      font-family: var(--kin-font); font-size: 1.05rem; font-weight: 600;
       outline: none; transition: border-color .2s; margin-bottom: 1.4rem;
     }
-    .form-input:focus { border-color: var(--coral); }
-    .form-input::placeholder { color: var(--muted); font-weight: 400; }
+    .form-input:focus { border-color: var(--kin-yellow); }
+    .form-input::placeholder { color: var(--storm-400); font-weight: 400; }
     .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
-    .landing-note { font-size: .7rem; color: var(--muted); text-align: center; margin-top: 1rem; line-height: 1.6; }
+    .landing-note { font-size: .74rem; color: var(--storm-400); text-align: center; margin-top: 1rem; line-height: 1.6; }
+
+    /* ─── RADAR SWEEP ─────────────────────────────── */
+    .radar {
+      position: relative; width: 100%; max-width: 210px; aspect-ratio: 1;
+      border-radius: 50%; margin: 0 auto 1.25rem;
+      background:
+        repeating-radial-gradient(circle at 50% 50%, transparent 0 22px, rgba(143,167,229,.20) 22px 23px),
+        radial-gradient(circle at 50% 50%, rgba(38,109,217,.30) 0%, rgba(16,46,91,0) 72%);
+      border: 1px solid var(--edge);
+      overflow: hidden;
+    }
+    .radar::before {
+      content: ''; position: absolute; inset: 0; border-radius: 50%;
+      background: conic-gradient(from 0deg, rgba(255,200,87,.42) 0deg, rgba(255,200,87,0) 62deg, transparent 360deg);
+      animation: sweep 3.4s linear infinite;
+    }
+    .radar::after {
+      content: ''; position: absolute; top: 50%; left: 50%;
+      width: 9px; height: 9px; margin: -4.5px 0 0 -4.5px;
+      border-radius: 50%; background: var(--kin-yellow);
+      box-shadow: 0 0 16px var(--kin-yellow);
+    }
+    @keyframes sweep { to { transform: rotate(360deg); } }
+
     /* ─── PLAYER SCREEN ───────────────────────────── */
-    #player { padding-bottom: 3rem; background: #FFF7ED; }
-    .waiting-banner {
-      display: flex; flex-direction: column; align-items: center;
-      justify-content: center; text-align: center; padding: 4rem 2rem; min-height: 60vh;
-    }
-    .spinner {
-      width: 52px; height: 52px; border-radius: 50%;
-      border: 3px solid var(--coral-dim); border-top-color: var(--coral);
-      animation: spin 1.2s linear infinite; margin-bottom: 1.25rem;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    .waiting-banner { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 3rem 2rem; min-height: 58vh; }
     /* Ball display */
     .ball-display { text-align: center; padding: 1.5rem 1rem 1rem; }
     .ball-label { margin-bottom: .6rem; }
     .ball {
       display: inline-flex; align-items: center; justify-content: center;
-      width: 90px; height: 90px; border-radius: 50%;
-      font-family: 'Fredoka One', cursive; font-size: 2.6rem;
+      width: 92px; height: 92px; border-radius: 50%;
+      font-weight: 900; font-size: 2.5rem; letter-spacing: -.03em;
       transition: transform .3s;
     }
     .ball.active {
-      background: linear-gradient(135deg, var(--coral), var(--coral-bright));
-      color: var(--soft-white);
-      box-shadow: 0 0 32px var(--coral-glow);
-      animation: pulse-summer 2s ease infinite;
+      background: var(--kin-yellow); color: var(--neutral-1000);
+      box-shadow: 0 0 34px var(--lightning-glow);
+      animation: pulse-storm 2.2s ease infinite;
     }
-    .ball.empty { background: var(--card-dark); color: var(--muted); font-size: 1rem; font-family: 'Nunito', sans-serif; }
-    @keyframes pulse-summer { 0%,100%{box-shadow:0 0 16px var(--coral-glow)} 50%{box-shadow:0 0 40px rgba(255,107,53,.55)} }
-    .ball-letter { font-family: 'Fredoka One', cursive; font-size: 1.1rem; color: var(--coral); margin-right: .25rem; }
+    .ball.empty { background: var(--panel-hi); color: var(--storm-400); font-size: 1rem; font-weight: 600; border: 1px solid var(--edge); }
+    @keyframes pulse-storm { 0%,100% { box-shadow: 0 0 18px var(--lightning-glow); } 50% { box-shadow: 0 0 44px rgba(255,200,87,.6); } }
+    .ball-letter { font-weight: 900; font-size: 1.1rem; color: var(--kin-yellow); margin-right: .25rem; }
+    .next-call { font-size: .76rem; color: var(--storm-400); margin-top: .7rem; letter-spacing: .06em; }
+    .next-call b { color: var(--storm-200); font-variant-numeric: tabular-nums; }
+
     /* ── BINGO CARD ─────────────────────────────────── */
     .bingo-wrapper { max-width: 370px; margin: 0 auto 1rem; padding: 0 1rem; }
     .bingo-letters { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin-bottom: 4px; }
     .bingo-letter-cell {
-      background: linear-gradient(135deg, var(--coral), #f97316);
-      color: var(--soft-white);
-      font-family: 'Fredoka One', cursive; font-size: 1.6rem;
-      text-align: center; padding: .4rem .2rem; border-radius: 8px;
+      background: var(--kin-yellow); color: var(--neutral-1000);
+      font-weight: 900; font-size: 1.5rem; letter-spacing: -.02em;
+      text-align: center; padding: .35rem .2rem; border-radius: 8px;
     }
     .bingo-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
-    /* Base cell */
     .bingo-cell {
       aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
-      background: var(--card-bg);
-      border: 1.5px solid var(--card-border);
+      background: var(--panel-hi);
+      border: 1.5px solid var(--edge);
       border-radius: 8px;
-      font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 1.2rem;
-      color: var(--text-dark);
-      transition: background .15s;
+      font-weight: 700; font-size: 1.2rem; color: var(--white);
+      transition: background .15s, border-color .15s;
       user-select: none; cursor: pointer;
-      box-shadow: 0 1px 4px rgba(0,0,0,.05);
     }
-    .bingo-cell:hover:not(.is-free):not(.dabbed) {
-      background: var(--card-mid);
-    }
-    /* FREE space */
+    .bingo-cell:hover:not(.is-free):not(.dabbed) { background: rgba(255,255,255,.17); border-color: var(--edge-hi); }
+    /* The EYE (free space) */
     .bingo-cell.is-free {
-      background: var(--aqua); color: #0C4A6E;
-      font-size: .6rem; letter-spacing: .1em; font-weight: 800;
-      border-color: #22D3EE; cursor: default;
+      background: var(--storm-600); color: var(--white);
+      font-size: .62rem; letter-spacing: .12em; font-weight: 800;
+      border-color: var(--storm-500); cursor: default;
+      box-shadow: inset 0 0 18px rgba(0,0,0,.35);
     }
-    /* Player dabbed */
     .bingo-cell.dabbed {
-      background: linear-gradient(135deg, var(--coral), var(--coral-bright));
-      color: var(--soft-white);
-      border-color: var(--coral);
-      font-size: 1.7rem;
+      background: var(--kin-yellow); color: var(--neutral-1000);
+      border-color: var(--kin-yellow); font-size: 1.6rem; font-weight: 900;
       cursor: default;
     }
-    /* Winning line */
     .bingo-cell.winning {
-      background: linear-gradient(135deg, var(--sun), #F59E0B) !important;
-      color: var(--text-dark) !important;
-      border-color: var(--sun) !important;
-      animation: win-bloom 1s ease infinite !important;
-      cursor: default;
+      background: var(--clear) !important; color: var(--white) !important;
+      border-color: var(--clear-500) !important;
+      animation: win-surge 1.1s ease infinite !important; cursor: default;
     }
-    @keyframes win-bloom { 0%,100%{box-shadow:0 0 0 0 var(--sun-glow)} 50%{box-shadow:0 0 0 8px rgba(253,224,71,0)} }
+    @keyframes win-surge { 0%,100% { box-shadow: 0 0 0 0 rgba(39,117,64,.75); } 50% { box-shadow: 0 0 0 8px rgba(39,117,64,0); } }
+
     /* BINGO button */
     .bingo-btn-wrap { max-width: 370px; margin: 0 auto 1.8rem; padding: 0 1rem; }
     .btn-BINGO {
-      width: 100%; padding: 1.1rem 1rem;
-      background: linear-gradient(135deg, var(--coral) 0%, var(--coral-bright) 100%);
-      color: var(--soft-white); border: none; border-radius: 12px;
-      font-family: 'Fredoka One', cursive; font-size: 2.5rem; letter-spacing: .12em;
+      width: 100%; padding: 1.05rem 1rem;
+      background: var(--kin-yellow); color: var(--neutral-1000);
+      border: none; border-radius: 12px;
+      font-family: var(--kin-font); font-weight: 900;
+      font-size: 2.2rem; letter-spacing: .06em;
       cursor: pointer; transition: all .2s;
-      box-shadow: 0 4px 20px var(--coral-glow);
+      box-shadow: 0 4px 22px var(--lightning-glow);
     }
-    .btn-BINGO:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 8px 32px var(--coral-glow); }
-    .btn-BINGO:disabled {
-      background: var(--card-dark); color: var(--muted);
-      box-shadow: none; cursor: not-allowed; font-size: 2rem;
-    }
+    .btn-BINGO:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 8px 34px var(--lightning-glow); }
+    .btn-BINGO:disabled { background: var(--panel-hi); color: var(--storm-400); border: 1px solid var(--edge); box-shadow: none; cursor: not-allowed; font-size: 1.8rem; }
+
     /* Called numbers chips */
-    .called-section { max-width: 370px; margin: 0 auto; padding: 0 1rem; }
+    .called-section { max-width: 370px; margin: 0 auto; padding: 0 1rem 1rem; }
     .chips-row { display: flex; flex-wrap: wrap; gap: 5px; }
     .chip {
       display: inline-flex; align-items: center; justify-content: center;
-      height: 34px; padding: 0 .6rem; border-radius: 100px;
-      font-family: 'Nunito', sans-serif; font-weight: 700; font-size: .78rem;
-      background: var(--card-bg); color: var(--text-mid);
-      border: 1.5px solid var(--card-border); white-space: nowrap;
-      box-shadow: 0 1px 3px rgba(0,0,0,.06);
+      height: 34px; padding: 0 .62rem; border-radius: 100px;
+      font-weight: 700; font-size: .78rem;
+      background: var(--panel-hi); color: var(--storm-200);
+      border: 1px solid var(--edge); white-space: nowrap;
     }
-    .chip .chip-letter { color: var(--coral); margin-right: 2px; font-size: .7rem; font-weight: 800; }
+    .chip .chip-letter { color: var(--kin-yellow); margin-right: 2px; font-size: .7rem; font-weight: 800; }
+
     /* Celebration */
     .celebration {
       position: fixed; inset: 0; z-index: 200;
       display: flex; align-items: center; justify-content: center;
-      background: rgba(255,247,237,.5); backdrop-filter: blur(8px);
+      background: rgba(16,46,91,.72); backdrop-filter: blur(8px);
       opacity: 0; pointer-events: none; transition: opacity .3s;
     }
     .celebration.show { opacity: 1; pointer-events: all; }
     .celebration-box {
-      background: linear-gradient(135deg, var(--coral), #f97316);
-      border: none;
-      border-radius: 24px; padding: 3rem 4rem; text-align: center;
+      background: var(--kin-yellow); border-radius: 24px;
+      padding: 2.6rem 3.4rem; text-align: center;
       transform: scale(.8); transition: transform .4s cubic-bezier(.34,1.56,.64,1);
-      box-shadow: 0 24px 60px rgba(255,107,53,.4);
+      box-shadow: 0 24px 64px rgba(0,0,0,.5);
     }
     .celebration.show .celebration-box { transform: scale(1); }
-    .celebration-title {
-      font-family: 'Fredoka One', cursive;
-      font-size: clamp(3rem, 12vw, 6rem); line-height: .9;
-      color: var(--soft-white);
-    }
-    .celebration-sub { font-size: 1rem; color: rgba(255,255,255,.85); margin-top: .6rem; letter-spacing: .08em; }
+    .celebration-title { font-weight: 900; letter-spacing: -.03em; font-size: clamp(3rem, 12vw, 5.5rem); line-height: .9; color: var(--neutral-1000); }
+    .celebration-sub { font-size: .95rem; font-weight: 600; color: var(--warm-black); margin-top: .5rem; letter-spacing: .04em; }
     .confetti-wrap { position: fixed; inset: 0; z-index: 150; pointer-events: none; }
     .confetti-piece { position: absolute; top: -20px; border-radius: 2px; animation: fall linear forwards; }
-    @keyframes fall { 0%{transform:translateY(0) rotate(0deg);opacity:1} 100%{transform:translateY(110vh) rotate(720deg);opacity:0} }
-    /* ─── CALLER SCREEN ───────────────────────────── */
-    #caller { padding-bottom: 3rem; background: #FFF7ED; }
+    @keyframes fall { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(110vh) rotate(720deg); opacity: 0; } }
+
+    /* ─── HOST / STORM CENTER ─────────────────────── */
     .caller-grid {
-      display: grid; grid-template-columns: 1fr 320px;
-      gap: 1.25rem; max-width: 1080px; margin: 1.25rem auto; padding: 0 1.25rem;
+      display: grid; grid-template-columns: 1fr 330px;
+      gap: 1.25rem; max-width: 1120px; margin: 1.25rem auto; padding: 0 1.25rem;
     }
-    @media(max-width:768px) { .caller-grid { grid-template-columns: 1fr; } }
+    @media(max-width:820px) { .caller-grid { grid-template-columns: 1fr; } }
     .stats-bar {
       display: grid; grid-template-columns: repeat(4, 1fr);
-      gap: .75rem; max-width: 1080px; margin: 1.25rem auto 0; padding: 0 1.25rem;
+      gap: .75rem; max-width: 1120px; margin: 1.25rem auto 0; padding: 0 1.25rem;
     }
     @media(max-width:600px) { .stats-bar { grid-template-columns: repeat(2,1fr); } }
-    .stat-block {
-      background: var(--card-bg); border: 1px solid var(--card-border);
-      border-radius: 12px; padding: 1rem; text-align: center;
-      box-shadow: 0 2px 8px rgba(0,0,0,.05);
-    }
-    .stat-val { font-family: 'Fredoka One', cursive; font-size: 2.2rem; color: var(--coral); }
-    .stat-lbl { font-size: .66rem; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); margin-top: .2rem; }
-    .draw-area { display: flex; flex-direction: column; align-items: center; padding: 2rem 1rem; text-align: center; }
-    .draw-display { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
-    .draw-letter-big { font-family: 'Fredoka One', cursive; font-size: 4rem; color: var(--coral); }
+    .stat-block { background: var(--panel); border: 1px solid var(--edge); border-radius: 12px; padding: 1rem; text-align: center; }
+    .stat-val { font-weight: 900; font-size: 2rem; letter-spacing: -.03em; color: var(--kin-yellow); font-variant-numeric: tabular-nums; }
+    .stat-lbl { font-size: .66rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--storm-300); margin-top: .2rem; }
+    .draw-area { display: flex; flex-direction: column; align-items: center; padding: 1.6rem 1rem; text-align: center; }
+    .draw-display { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.4rem; }
+    .draw-letter-big { font-weight: 900; font-size: 3.6rem; letter-spacing: -.04em; color: var(--kin-yellow); }
     .ball-lg {
-      width: 110px; height: 110px; border-radius: 50%;
+      width: 112px; height: 112px; border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
-      font-family: 'Fredoka One', cursive; font-size: 3.2rem; transition: transform .3s;
+      font-weight: 900; font-size: 3rem; letter-spacing: -.03em; transition: transform .3s;
     }
-    .ball-lg.active { background: linear-gradient(135deg, var(--coral), var(--coral-bright)); color: #fff; box-shadow: 0 0 40px var(--coral-glow); }
-    .ball-lg.idle   { background: var(--card-dark); color: var(--muted); font-size: 1rem; font-family: 'Nunito', sans-serif; }
+    .ball-lg.active { background: var(--kin-yellow); color: var(--neutral-1000); box-shadow: 0 0 42px var(--lightning-glow); }
+    .ball-lg.idle   { background: var(--panel-hi); color: var(--storm-400); font-size: 1rem; font-weight: 600; border: 1px solid var(--edge); }
+
+    /* Storm control */
+    .control-row { display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; justify-content: center; }
     .btn-draw {
-      background: linear-gradient(135deg, var(--coral), var(--coral-bright));
-      color: var(--soft-white);
+      background: var(--kin-yellow); color: var(--neutral-1000);
       border: none; border-radius: 12px;
-      font-family: 'Fredoka One', cursive; font-size: 1.8rem; letter-spacing: .06em;
-      padding: .9rem 3rem; cursor: pointer; transition: all .2s;
-      box-shadow: 0 4px 20px var(--coral-glow);
+      font-family: var(--kin-font); font-weight: 900; font-size: 1.5rem; letter-spacing: .04em;
+      padding: .8rem 2.4rem; cursor: pointer; transition: all .2s;
+      box-shadow: 0 4px 22px var(--lightning-glow);
     }
-    .btn-draw:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 28px var(--coral-glow); }
-    .btn-draw:disabled { background: var(--card-dark); color: var(--muted); box-shadow: none; cursor: not-allowed; }
-    .btn-copy-slack {
-      background: transparent; color: var(--muted);
-      border: 1.5px dashed var(--card-border); border-radius: 8px;
-      font-family: 'Nunito', sans-serif; font-size: .78rem; font-weight: 700;
-      letter-spacing: .06em; text-transform: uppercase;
-      padding: .5rem 1.2rem; cursor: pointer; transition: all .2s;
+    .btn-draw:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 30px var(--lightning-glow); }
+    .btn-draw:disabled { background: var(--panel-hi); color: var(--storm-400); border: 1px solid var(--edge); box-shadow: none; cursor: not-allowed; }
+    .btn-auto {
+      background: var(--clear); color: var(--white);
+      border: none; border-radius: 12px;
+      font-family: var(--kin-font); font-weight: 800; font-size: 1rem; letter-spacing: .06em;
+      padding: .85rem 1.5rem; cursor: pointer; transition: all .2s; text-transform: uppercase;
+      box-shadow: 0 4px 18px rgba(39,117,64,.4);
     }
-    .btn-copy-slack:hover { border-color: var(--coral); color: var(--coral); }
-    .btn-copy-slack.copied { border-color: var(--lime); color: var(--lime); }
+    .btn-auto:hover:not(:disabled) { background: var(--clear-500); transform: translateY(-2px); }
+    .btn-auto.running { background: var(--alert); box-shadow: 0 4px 18px rgba(170,30,31,.45); }
+    .btn-auto.running:hover { background: var(--alert-500); }
+    .btn-auto:disabled { background: var(--panel-hi); color: var(--storm-400); box-shadow: none; cursor: not-allowed; }
+    .auto-status {
+      display: flex; align-items: center; gap: .5rem; justify-content: center;
+      margin-top: 1rem; font-size: .82rem; color: var(--storm-300);
+    }
+    .auto-status .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--storm-400); }
+    .auto-status.live .dot { background: var(--clear); box-shadow: 0 0 0 0 rgba(39,117,64,.7); animation: live-ping 1.8s ease infinite; }
+    @keyframes live-ping { 0% { box-shadow: 0 0 0 0 rgba(39,117,64,.7); } 70% { box-shadow: 0 0 0 8px rgba(39,117,64,0); } 100% { box-shadow: 0 0 0 0 rgba(39,117,64,0); } }
+    .countdown { font-weight: 900; font-size: 1.5rem; color: var(--white); font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+    .select-storm {
+      background: rgba(0,0,0,.3); color: var(--white);
+      border: 1.5px solid var(--edge); border-radius: 8px;
+      padding: .55rem .8rem; font-family: var(--kin-font); font-weight: 600; font-size: .88rem;
+      outline: none; cursor: pointer;
+    }
+    .select-storm:focus { border-color: var(--kin-yellow); }
+    .select-storm option { background: var(--storm-1000); color: var(--white); }
+    .hook-row { display: flex; gap: .5rem; align-items: stretch; margin-bottom: .5rem; }
+    .hook-input {
+      flex: 1; min-width: 0;
+      background: rgba(0,0,0,.3); border: 1.5px solid var(--edge); border-radius: 8px;
+      padding: .6rem .8rem; color: var(--white);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .76rem;
+      outline: none;
+    }
+    .hook-input:focus { border-color: var(--kin-yellow); }
+    .hook-input::placeholder { color: var(--storm-400); }
+    .hook-state { font-size: .74rem; font-weight: 600; margin-top: .5rem; }
+    .hook-state.on  { color: var(--clear-500); }
+    .hook-state.off { color: var(--storm-400); }
+    .hook-state.err { color: var(--alert-500); }
+
+    /* Numbers board */
     .board-cols { display: grid; grid-template-columns: repeat(5, 1fr); gap: .5rem; }
-    .board-col-header { font-family: 'Fredoka One', cursive; font-size: 1.2rem; text-align: center; color: var(--coral); margin-bottom: .35rem; }
+    .board-col-header { font-weight: 900; font-size: 1.15rem; text-align: center; color: var(--kin-yellow); margin-bottom: .35rem; }
     .board-col { display: flex; flex-direction: column; gap: 3px; }
     .board-num {
       width: 100%; aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
-      font-family: 'Nunito', sans-serif; font-weight: 700; font-size: .78rem;
-      background: var(--card-mid); color: var(--muted);
-      border-radius: 6px; border: 1px solid var(--card-border); transition: all .25s;
+      font-weight: 600; font-size: .76rem;
+      background: rgba(255,255,255,.04); color: var(--storm-400);
+      border-radius: 6px; border: 1px solid rgba(255,255,255,.08); transition: all .25s;
     }
-    .board-num.called { background: var(--coral-dim); color: var(--coral-bright); border-color: rgba(255,107,53,.3); }
-    .board-num.latest { background: var(--coral); color: var(--soft-white); border-color: var(--coral); box-shadow: 0 0 12px var(--coral-glow); }
+    .board-num.called { background: var(--lightning-dim); color: var(--kin-yellow); border-color: var(--edge-hi); }
+    .board-num.latest { background: var(--kin-yellow); color: var(--neutral-1000); border-color: var(--kin-yellow); font-weight: 800; box-shadow: 0 0 14px var(--lightning-glow); }
+
     .player-row {
       display: flex; align-items: center; justify-content: space-between;
-      padding: .65rem .9rem; background: var(--card-mid); border-radius: 8px;
-      margin-bottom: .4rem; border: 1px solid var(--card-border);
+      padding: .6rem .85rem; background: var(--panel); border-radius: 8px;
+      margin-bottom: .4rem; border: 1px solid var(--edge);
     }
-    .player-row-name { font-weight: 700; font-size: .95rem; color: var(--text-dark); }
-    .player-row-card { font-size: .68rem; color: var(--muted); letter-spacing: .06em; }
-    .badge-live {
-      font-size: .62rem; padding: .18rem .55rem; border-radius: 100px;
-      background: var(--lime-dim); color: #4D7C0F;
-      border: 1px solid rgba(132,204,22,.3); font-weight: 800; letter-spacing: .06em;
-    }
-    .claim-row { padding: .9rem; background: var(--card-mid); border-radius: 8px; border: 1px solid rgba(255,107,53,.25); margin-bottom: .6rem; }
-    .claim-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: .5rem; }
-    .claim-name { font-weight: 700; font-size: .95rem; color: var(--text-dark); }
-    .claim-time { font-size: .68rem; color: var(--muted); }
-    .claim-patterns { font-size: .73rem; color: var(--muted); margin-bottom: .6rem; }
-    .claim-badge { font-size: .66rem; padding: .18rem .55rem; border-radius: 4px; font-weight: 800; letter-spacing: .06em; }
-    .claim-badge.confirmed { background: var(--lime-dim); color: #4D7C0F; }
-    .claim-badge.rejected  { background: rgba(239,68,68,.1); color: #DC2626; }
-    .empty-state { text-align: center; padding: 2rem; color: var(--muted); font-size: .88rem; }
+    .player-row-name { font-weight: 700; font-size: .92rem; color: var(--white); }
+    .player-row-card { font-size: .68rem; color: var(--storm-400); letter-spacing: .05em; }
+    .badge-live { font-size: .62rem; padding: .2rem .55rem; border-radius: 100px; background: rgba(39,117,64,.28); color: #a8d8b6; border: 1px solid rgba(39,117,64,.55); font-weight: 700; letter-spacing: .06em; }
+    .claim-row { padding: .85rem; background: var(--panel); border-radius: 8px; border: 1px solid var(--edge-hi); margin-bottom: .6rem; }
+    .claim-head { display: flex; justify-content: space-between; align-items: center; gap: .5rem; margin-bottom: .45rem; }
+    .claim-name { font-weight: 700; font-size: .92rem; color: var(--white); }
+    .claim-time { font-size: .68rem; color: var(--storm-400); }
+    .claim-patterns { font-size: .73rem; color: var(--storm-300); }
+    .claim-badge { font-size: .66rem; padding: .2rem .55rem; border-radius: 4px; font-weight: 700; letter-spacing: .05em; }
+    .claim-badge.confirmed { background: rgba(39,117,64,.28); color: #a8d8b6; }
+    .claim-badge.rejected  { background: rgba(170,30,31,.28); color: #e8b4b4; }
+    .empty-state { text-align: center; padding: 1.6rem; color: var(--storm-400); font-size: .86rem; }
+
     /* ─── VERIFY MODAL ────────────────────────────── */
     .modal-overlay {
       position: fixed; inset: 0; z-index: 100;
-      background: rgba(0,0,0,.35); backdrop-filter: blur(5px);
+      background: rgba(0,0,0,.62); backdrop-filter: blur(6px);
       display: flex; align-items: center; justify-content: center; padding: 1rem;
     }
     .modal-overlay.hidden { display: none; }
     .modal {
-      background: var(--card-bg); border: 1px solid var(--card-border);
-      border-radius: 18px; padding: 2rem; max-width: 420px; width: 100%; max-height: 90vh; overflow-y: auto;
-      box-shadow: 0 16px 48px rgba(0,0,0,.12);
+      background: var(--storm-1000); border: 1px solid var(--edge);
+      border-radius: 18px; padding: 1.8rem; max-width: 430px; width: 100%; max-height: 90vh; overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0,0,0,.6);
     }
-    .modal-title { font-family: 'Fredoka One', cursive; font-size: 1.8rem; color: var(--coral); margin-bottom: .3rem; }
-    .modal-sub   { font-size: .83rem; color: var(--muted); margin-bottom: 1.25rem; }
-    .verify-result {
-      text-align: center; padding: .75rem 1rem; border-radius: 8px;
-      font-weight: 700; font-size: 1rem; margin-bottom: 1rem;
-    }
-    .verify-result.valid   { background: var(--lime-dim); color: #4D7C0F; border: 1px solid rgba(132,204,22,.3); }
-    .verify-result.invalid { background: rgba(239,68,68,.1); color: #DC2626; border: 1px solid rgba(239,68,68,.3); }
+    .modal-title { font-weight: 900; font-size: 1.6rem; letter-spacing: -.02em; color: var(--kin-yellow); margin-bottom: .3rem; }
+    .modal-sub   { font-size: .84rem; color: var(--storm-300); margin-bottom: 1.1rem; }
+    .verify-result { text-align: center; padding: .7rem 1rem; border-radius: 8px; font-weight: 700; font-size: .95rem; margin-bottom: 1rem; }
+    .verify-result.valid   { background: rgba(39,117,64,.25); color: #bfe3c9; border: 1px solid rgba(39,117,64,.6); }
+    .verify-result.invalid { background: rgba(170,30,31,.25); color: #f0c4c4; border: 1px solid rgba(170,30,31,.6); }
     .mini-letters { display: grid; grid-template-columns: repeat(5,1fr); gap: 3px; margin-bottom: 3px; }
-    .mini-letter-cell { background: linear-gradient(135deg, var(--coral), #f97316); color: #fff; font-family: 'Fredoka One', cursive; font-size: .9rem; text-align: center; padding: .25rem; border-radius: 4px; }
+    .mini-letter-cell { background: var(--kin-yellow); color: var(--neutral-1000); font-weight: 900; font-size: .88rem; text-align: center; padding: .25rem; border-radius: 4px; }
     .mini-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 3px; margin-bottom: 1rem; }
     .mini-cell {
       aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
-      background: var(--card-mid); border-radius: 4px;
-      font-family: 'Nunito', sans-serif; font-weight: 700; font-size: .72rem;
-      border: 1px solid var(--card-border); color: var(--text-dark);
+      background: var(--panel-hi); border-radius: 4px;
+      font-weight: 700; font-size: .72rem;
+      border: 1px solid var(--edge); color: var(--white);
     }
-    .mini-cell.free         { background: var(--aqua); color: #0C4A6E; font-size: .45rem; letter-spacing: .05em; border-color: #22D3EE; }
-    .mini-cell.valid-dab    { background: rgba(132,204,22,.15); color: #4D7C0F; border-color: rgba(132,204,22,.35); }
-    .mini-cell.invalid-dab  { background: rgba(239,68,68,.12); color: #DC2626; border-color: rgba(239,68,68,.4); position: relative; }
-    .mini-cell.invalid-dab::after { content: '✗'; position: absolute; font-size: 1.1em; color: #DC2626; }
+    .mini-cell.free        { background: var(--storm-600); color: var(--white); font-size: .46rem; letter-spacing: .06em; border-color: var(--storm-500); }
+    .mini-cell.valid-dab   { background: rgba(39,117,64,.35); color: #cfe9d6; border-color: rgba(39,117,64,.7); }
+    .mini-cell.invalid-dab { background: rgba(170,30,31,.32); color: #f4cccc; border-color: rgba(170,30,31,.75); position: relative; }
+    .mini-cell.invalid-dab::after { content: '✗'; position: absolute; font-size: 1.1em; color: #f4cccc; }
     .modal-actions { display: flex; gap: .6rem; }
-    .modal-actions .btn { flex: 1; font-size: .88rem; padding: .6rem .5rem; }
+    .modal-actions .btn { flex: 1; font-size: .86rem; padding: .6rem .5rem; }
+
     /* ─── TOAST ───────────────────────────────────── */
     .toast {
       position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 300;
-      background: var(--card-bg); border: 1px solid var(--card-border);
-      border-radius: 12px; padding: .9rem 1.25rem;
-      font-weight: 700; font-size: .88rem; max-width: 280px; color: var(--text-dark);
+      background: var(--storm-900); border: 1px solid var(--edge);
+      border-radius: 12px; padding: .85rem 1.2rem;
+      font-weight: 600; font-size: .86rem; max-width: 300px; color: var(--white);
       transform: translateY(80px); opacity: 0; transition: all .3s; pointer-events: none;
-      box-shadow: 0 8px 24px rgba(0,0,0,.1);
+      box-shadow: 0 10px 28px rgba(0,0,0,.5);
     }
     .toast.show    { transform: translateY(0); opacity: 1; }
-    .toast.success { border-color: rgba(132,204,22,.5); }
-    .toast.error   { border-color: rgba(239,68,68,.5); }
+    .toast.success { border-color: rgba(39,117,64,.7); }
+    .toast.error   { border-color: rgba(170,30,31,.75); }
+
     @media(max-width:440px) {
       .bingo-cell { font-size: 1rem; }
-      .bingo-letter-cell { font-size: 1.3rem; }
+      .bingo-letter-cell { font-size: 1.25rem; }
       .btn-grid { grid-template-columns: 1fr; }
+      .draw-letter-big { font-size: 2.6rem; }
+      .ball-lg { width: 92px; height: 92px; font-size: 2.4rem; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
     }
   </style>
 </head>
@@ -442,53 +479,56 @@
 <!-- ══════════════════════ LANDING ══════════════════════ -->
 <div id="landing" class="screen active">
   <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:2rem;text-align:center;position:relative;z-index:1">
-    <div class="spring-badge">
-      ☀️ Summer Edition
-    </div>
-    <h1 class="big-title fresh">KIN<br>BINGO</h1>
-    <p class="spring-sub">Sun's Out, Dabs Out</p>
+    <div class="storm-badge"><span class="spin-ico">🌀</span> Hurricane Season</div>
+    <h1 class="big-title">KIN<br><em>BINGO</em></h1>
+    <p class="storm-sub">Eye of the storm</p>
     <div class="landing-form">
-      <label class="form-label" for="nameInput">Your Name</label>
+      <label class="form-label" for="nameInput">Your name</label>
       <input id="nameInput" class="form-input" type="text" placeholder="e.g. Kinberly" maxlength="30" autocomplete="off">
       <div class="btn-grid">
-        <button class="btn btn-spring btn-lg" onclick="joinPlayer()">PLAY BINGO</button>
-        <button class="btn btn-ghost btn-lg" onclick="joinCaller()">HOST GAME</button>
+        <button class="btn btn-storm btn-lg" onclick="joinPlayer()">Track the storm</button>
+        <button class="btn btn-ghost btn-lg" onclick="joinCaller()">Storm center</button>
       </div>
       <p class="landing-note">
-        Enter your name and hit <strong style="color:var(--coral)">Play Bingo</strong> to join.<br>
-        Running the game? Click <strong style="color:var(--text-mid)">Host Game</strong>.
+        Enter your name and hit <strong style="color:var(--kin-yellow)">Track the storm</strong> to grab a card.<br>
+        Running the game? Open <strong style="color:var(--storm-200)">Storm center</strong>.
       </p>
     </div>
   </div>
 </div>
+
 <!-- ══════════════════════ PLAYER ═══════════════════════ -->
 <div id="player" class="screen">
   <header class="app-header">
     <div class="logo-text">KIN <span>BINGO</span></div>
     <div style="text-align:center">
-      <div style="font-size:.75rem;color:var(--muted)">Playing as</div>
-      <div style="font-weight:700;font-size:.95rem" id="p-name-display"></div>
+      <div style="font-size:.72rem;color:var(--storm-400)">Playing as</div>
+      <div style="font-weight:700;font-size:.92rem" id="p-name-display"></div>
     </div>
     <div style="text-align:right">
-      <div class="mono-label">Card #</div>
-      <div style="font-family:'Fredoka One',cursive;font-size:1rem;color:var(--coral)" id="p-card-num"></div>
+      <div class="mono-label">Card</div>
+      <div style="font-weight:900;font-size:.95rem;color:var(--kin-yellow)" id="p-card-num"></div>
     </div>
   </header>
+
   <div id="p-waiting" class="waiting-banner" style="display:none">
-    <div class="spinner"></div>
-    <div class="fresh" style="font-size:1.8rem;color:var(--coral);margin-bottom:.5rem">WAITING FOR HOST</div>
-    <div style="color:var(--muted);font-size:.95rem">The host hasn't started the game yet. Hang tight!</div>
+    <div class="radar"></div>
+    <div class="display-hd" style="font-size:1.7rem;color:var(--white);margin-bottom:.5rem">TRACKING THE SYSTEM</div>
+    <div style="color:var(--storm-300);font-size:.95rem;max-width:340px">
+      No calls yet. The storm center hasn't started this round yet. Hang tight, your card is ready.
+    </div>
   </div>
+
   <div id="p-game" style="display:none">
-    <!-- Latest ball -->
     <div class="ball-display">
-      <div class="mono-label ball-label">LATEST CALL</div>
+      <div class="mono-label ball-label">Latest call</div>
       <div style="display:flex;align-items:center;justify-content:center;gap:.4rem">
         <span class="ball-letter" id="p-ball-letter"></span>
-        <div class="ball empty" id="p-ball"><span id="p-ball-num">—</span></div>
+        <div class="ball empty" id="p-ball"><span id="p-ball-num">·</span></div>
       </div>
+      <div class="next-call" id="p-next-call" style="display:none">Next call in <b id="p-next-time">·</b></div>
     </div>
-    <!-- Bingo Card — tap any cell to mark it -->
+
     <div class="bingo-wrapper">
       <div class="bingo-letters">
         <div class="bingo-letter-cell">B</div><div class="bingo-letter-cell">I</div>
@@ -497,78 +537,123 @@
       </div>
       <div class="bingo-grid" id="p-card-grid"></div>
     </div>
+
     <div class="bingo-btn-wrap">
       <button class="btn-BINGO" id="bingo-btn" disabled onclick="callBingo()">BINGO!</button>
-      <div style="font-size:.7rem;color:var(--muted);text-align:center;margin-top:.6rem">
-        Tap numbers to mark them. Complete a line and call BINGO!
+      <div style="font-size:.72rem;color:var(--storm-400);text-align:center;margin-top:.6rem">
+        Tap numbers to mark them. Complete a line and call BINGO. The center square is the EYE, and it's free.
       </div>
     </div>
+
     <div class="called-section">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem">
-        <div class="mono-label">Numbers Called</div>
+        <div class="mono-label">Numbers called</div>
         <div class="mono-label" id="p-called-count">0 / 75</div>
       </div>
       <div class="chips-row" id="p-chips"></div>
     </div>
   </div>
+
   <div class="celebration" id="celebration">
     <div class="celebration-box">
-      <div class="celebration-title fresh">BINGO!</div>
-      <div class="celebration-sub" id="cel-sub">Waiting for host to verify...</div>
+      <div class="celebration-title">BINGO!</div>
+      <div class="celebration-sub" id="cel-sub">Waiting for the storm center to verify…</div>
     </div>
   </div>
   <div class="confetti-wrap" id="confetti"></div>
 </div>
-<!-- ══════════════════════ HOST ══════════════════════════ -->
+
+<!-- ══════════════════════ HOST / STORM CENTER ══════════ -->
 <div id="caller" class="screen">
   <header class="app-header">
-    <div class="logo-text">KIN <span>BINGO</span> <span style="color:var(--muted);font-family:'Nunito',sans-serif;font-size:.75rem;letter-spacing:.08em;font-weight:800">HOST</span></div>
-    <div style="font-size:.8rem;color:var(--muted)"><span id="c-player-count">0</span> players connected</div>
-    <div><button class="btn btn-ghost btn-sm" onclick="resetGame()">NEW GAME</button></div>
+    <div class="logo-text">KIN <span>BINGO</span> <span class="host-tag">STORM CENTER</span></div>
+    <div style="font-size:.78rem;color:var(--storm-300)"><span id="c-player-count">0</span> players tracking</div>
+    <div><button class="btn btn-ghost btn-sm" onclick="resetGame()">New game</button></div>
   </header>
+
   <div class="stats-bar">
     <div class="stat-block"><div class="stat-val" id="s-players">0</div><div class="stat-lbl">Players</div></div>
     <div class="stat-block"><div class="stat-val" id="s-called">0</div><div class="stat-lbl">Called</div></div>
     <div class="stat-block"><div class="stat-val" id="s-remaining">75</div><div class="stat-lbl">Remaining</div></div>
-    <div class="stat-block"><div class="stat-val" id="s-claims">0</div><div class="stat-lbl">Pending Claims</div></div>
+    <div class="stat-block"><div class="stat-val" id="s-claims">0</div><div class="stat-lbl">Pending claims</div></div>
   </div>
+
   <div class="caller-grid">
     <div>
+      <!-- DRAW -->
       <div class="card" style="margin-bottom:1.25rem">
         <div class="draw-area">
-          <div class="mono-label" style="margin-bottom:1rem">DRAW A NUMBER</div>
+          <div class="mono-label" style="margin-bottom:1rem">Current call</div>
           <div class="draw-display">
-            <span class="draw-letter-big" id="c-draw-letter">—</span>
+            <span class="draw-letter-big" id="c-draw-letter">·</span>
             <div class="ball-lg idle" id="c-draw-ball"><span id="c-draw-num">?</span></div>
           </div>
-          <button class="btn-draw" id="draw-btn" onclick="drawNumber()">DRAW</button>
-          <div style="font-size:.74rem;color:var(--muted);margin-top:.7rem" id="c-remaining-text">75 balls remaining</div>
-          <button class="btn-copy-slack" id="copy-slack-btn" onclick="copyForSlack()" style="margin-top:1rem;display:none">
-            📋 Copy Called Numbers for Slack
-          </button>
+          <div class="control-row">
+            <button class="btn-draw" id="draw-btn" onclick="manualDraw()">DRAW</button>
+            <button class="btn-auto" id="auto-btn" onclick="toggleAuto()">Start auto-draw</button>
+          </div>
+          <div class="control-row" style="margin-top:.9rem">
+            <label class="mono-label" for="interval-select" style="margin:0">Every</label>
+            <select class="select-storm" id="interval-select" onchange="onIntervalChange()">
+              <option value="60000">1 min</option>
+              <option value="120000">2 min</option>
+              <option value="150000" selected>2.5 min</option>
+              <option value="180000">3 min</option>
+              <option value="300000">5 min</option>
+            </select>
+          </div>
+          <div class="auto-status" id="auto-status">
+            <span class="dot"></span>
+            <span id="auto-status-text">Auto-draw is off. You're calling manually.</span>
+          </div>
+          <div class="countdown" id="countdown" style="display:none;margin-top:.4rem">·</div>
+          <div class="fine" style="margin-top:.9rem" id="c-remaining-text">75 balls remaining</div>
         </div>
       </div>
+
+      <!-- SLACK -->
+      <div class="card" style="margin-bottom:1.25rem">
+        <div class="mono-label" style="margin-bottom:.8rem">Slack auto-post</div>
+        <div class="hook-row">
+          <input class="hook-input" id="hook-input" type="password" placeholder="https://hooks.slack.com/services/…" autocomplete="off" spellcheck="false">
+          <button class="btn btn-ghost btn-sm" onclick="toggleHookVisible()" id="hook-eye" title="Show/hide">Show</button>
+          <button class="btn btn-storm btn-sm" onclick="saveHook()">Save</button>
+        </div>
+        <div class="control-row" style="justify-content:flex-start;gap:.5rem">
+          <button class="btn btn-ghost btn-sm" onclick="testHook()">Send test message</button>
+          <button class="btn btn-ghost btn-sm" onclick="clearHook()">Forget</button>
+          <button class="btn btn-ghost btn-sm" onclick="copyForSlack()" id="copy-slack-btn">Copy board</button>
+        </div>
+        <div class="hook-state off" id="hook-state">No webhook saved, so nothing will post to Slack.</div>
+        <div class="fine" style="margin-top:.6rem;line-height:1.5">
+          Stored in this browser only, never in the repo. Each call posts a short message; every 5th call posts the full board.
+        </div>
+      </div>
+
+      <!-- BOARD -->
       <div class="card">
-        <div class="mono-label" style="margin-bottom:.9rem">NUMBERS BOARD</div>
+        <div class="mono-label" style="margin-bottom:.9rem">Numbers board</div>
         <div class="board-cols" id="c-board"></div>
       </div>
     </div>
+
     <div>
       <div class="card" style="margin-bottom:1.25rem">
-        <div class="mono-label" style="margin-bottom:.8rem">PLAYERS IN GAME</div>
-        <div id="c-players-list"><div class="empty-state">No players yet — share the link!</div></div>
+        <div class="mono-label" style="margin-bottom:.8rem">Players in game</div>
+        <div id="c-players-list"><div class="empty-state">No players yet. Share the link!</div></div>
       </div>
       <div class="card">
-        <div class="mono-label" style="margin-bottom:.8rem">BINGO CLAIMS</div>
+        <div class="mono-label" style="margin-bottom:.8rem">Bingo claims</div>
         <div id="c-claims-list"><div class="empty-state">No claims yet.</div></div>
       </div>
     </div>
   </div>
 </div>
+
 <!-- ══════════════════════ VERIFY MODAL ═════════════════ -->
 <div class="modal-overlay hidden" id="verify-modal">
   <div class="modal">
-    <div class="modal-title fresh">VERIFY BINGO</div>
+    <div class="modal-title">Verify bingo</div>
     <div class="modal-sub" id="m-player-info"></div>
     <div id="m-result"></div>
     <div class="mini-letters">
@@ -577,19 +662,21 @@
       <div class="mini-letter-cell">O</div>
     </div>
     <div class="mini-grid" id="m-card"></div>
-    <div style="font-size:.72rem;color:var(--muted);margin-bottom:1rem" id="m-legend">
-      <span style="color:var(--lime)">■</span> Valid dab &nbsp;
-      <span style="color:#DC2626">■</span> Marked but NOT called (invalid)
+    <div style="font-size:.72rem;color:var(--storm-400);margin-bottom:1rem" id="m-legend">
+      <span style="color:#bfe3c9">■</span> Valid dab &nbsp;
+      <span style="color:#f0c4c4">■</span> Marked but not called (invalid)
     </div>
-    <div style="font-size:.73rem;color:var(--muted);margin-bottom:1rem" id="m-patterns"></div>
+    <div style="font-size:.73rem;color:var(--storm-300);margin-bottom:1rem" id="m-patterns"></div>
     <div class="modal-actions">
-      <button class="btn btn-green" onclick="confirmBingo(true)">CONFIRM</button>
-      <button class="btn btn-red"   onclick="confirmBingo(false)">REJECT</button>
-      <button class="btn btn-ghost" onclick="closeModal()">CLOSE</button>
+      <button class="btn btn-green" onclick="confirmBingo(true)">Confirm</button>
+      <button class="btn btn-red"   onclick="confirmBingo(false)">Reject</button>
+      <button class="btn btn-ghost" onclick="closeModal()">Close</button>
     </div>
   </div>
 </div>
+
 <div class="toast" id="toast"></div>
+
 <!-- ══════════════════════ JAVASCRIPT ═══════════════════ -->
 <script>
 /* ── FIREBASE CONFIG ─────────────────────────────────── */
@@ -604,6 +691,19 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
+
+/* Anonymous sign-in. Lets the locked-down database rules require an
+   authenticated session. If Anonymous auth isn't enabled in the Firebase
+   console the game still works. It just falls back to open rules. */
+const authReady = firebase.auth().signInAnonymously()
+  .catch(e => console.warn('Anonymous auth unavailable, continuing without it:', e && e.code));
+
+/* ── CONSTANTS ───────────────────────────────────────── */
+const HOOK_KEY     = 'kinBingo_slackHook';
+const INTERVAL_KEY = 'kinBingo_interval';
+const BOARD_EVERY  = 5;              // full board posted every Nth call
+const GAME_URL     = location.origin + location.pathname;
+
 /* ── STATE ───────────────────────────────────────────── */
 let role        = null;
 let myName      = '';
@@ -611,9 +711,25 @@ let myId        = '';
 let myCardNum   = '';
 let myCard      = [];
 let calledNums  = [];
-let myDabbed    = new Set(); // index 12 = FREE, always in
+let myDabbed    = new Set();   // index 12 = the EYE, always in
 let verifyClaim = null;
 let bingoCalled = false;
+
+// Host auto-draw
+let hostId       = '';
+let autoOn       = false;
+let autoTimer    = null;
+let tickTimer    = null;
+let hbTimer      = null;
+let nextDrawAt   = 0;
+let firing       = false;
+let intervalMs   = 150000;
+let announcedWin = new Set();  // claim ids already posted to Slack
+
+// Player countdown
+let playerNextAt = 0;
+let playerTick   = null;
+
 /* ── HELPERS ─────────────────────────────────────────── */
 const $ = id => document.getElementById(id);
 function rnd(chars, len) {
@@ -629,6 +745,16 @@ function timeAgo(ts) {
   const s = Math.round((Date.now() - ts) / 1000);
   return s < 60 ? `${s}s ago` : `${Math.round(s/60)}m ago`;
 }
+function mmss(ms) {
+  if (ms < 0) ms = 0;
+  const t = Math.round(ms / 1000);
+  return `${Math.floor(t/60)}:${String(t%60).padStart(2,'0')}`;
+}
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c =>
+    ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c]);
+}
+
 /* ── CARD GENERATION ─────────────────────────────────── */
 function makeCard() {
   const ranges = [[1,15],[16,30],[31,45],[46,60],[61,75]];
@@ -643,39 +769,40 @@ function makeCard() {
       card.push((row === 2 && col === 2) ? 'FREE' : cols[col][row]);
   return card;
 }
+
 /* ── BINGO PATTERNS ──────────────────────────────────── */
 const PATTERNS = {
-  'Row 1':       [0,1,2,3,4],    'Row 2':       [5,6,7,8,9],
-  'Row 3':       [10,11,12,13,14],'Row 4':       [15,16,17,18,19],
-  'Row 5':       [20,21,22,23,24],'B Column':    [0,5,10,15,20],
-  'I Column':    [1,6,11,16,21], 'N Column':    [2,7,12,17,22],
-  'G Column':    [3,8,13,18,23], 'O Column':    [4,9,14,19,24],
-  'Diagonal ↘': [0,6,12,18,24], 'Diagonal ↙': [4,8,12,16,20],
+  'Row 1':       [0,1,2,3,4],      'Row 2':    [5,6,7,8,9],
+  'Row 3':       [10,11,12,13,14], 'Row 4':    [15,16,17,18,19],
+  'Row 5':       [20,21,22,23,24], 'B Column': [0,5,10,15,20],
+  'I Column':    [1,6,11,16,21],   'N Column': [2,7,12,17,22],
+  'G Column':    [3,8,13,18,23],   'O Column': [4,9,14,19,24],
+  'Diagonal ↘': [0,6,12,18,24],   'Diagonal ↙': [4,8,12,16,20],
   'Star ⭐':     [0,4,12,20,24],
 };
-// Player side — based purely on what they dabbed
 function checkBingoByDabbed(dabbedSet) {
   const eff = new Set([...dabbedSet, 12]);
   return Object.entries(PATTERNS)
     .filter(([,idxs]) => idxs.every(i => eff.has(i)))
     .map(([name, indices]) => ({ name, indices }));
 }
-// Host side — checks called numbers as source of truth
 function checkBingoByCalledNums(card, called) {
   const cs = new Set(called);
   const marked = new Set(card.reduce((acc,v,i) => {
-    if (v==='FREE'||cs.has(v)) acc.push(i); return acc;
+    if (v === 'FREE' || cs.has(v)) acc.push(i); return acc;
   },[]));
   return Object.entries(PATTERNS)
     .filter(([,idxs]) => idxs.every(i => marked.has(i)))
     .map(([name, indices]) => ({ name, indices }));
 }
+
 /* ── SCREEN TRANSITIONS ──────────────────────────────── */
 function showScreen(toId) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   $(toId).classList.add('active');
   window.scrollTo(0, 0);
 }
+
 /* ── PERSIST DABBED ──────────────────────────────────── */
 function saveDabbed() {
   const key = 'kinBingo_' + myName;
@@ -684,14 +811,16 @@ function saveDabbed() {
   s.dabbed = [...myDabbed];
   sessionStorage.setItem(key, JSON.stringify(s));
 }
+
 /* ── LANDING ─────────────────────────────────────────── */
 function getValidName() {
   const n = $('nameInput').value.trim();
   if (!n) { showToast('Please enter your name!', 'error'); return null; }
   return n;
 }
-function joinPlayer() {
+async function joinPlayer() {
   const name = getValidName(); if (!name) return;
+  await authReady;
   myName = name; role = 'player';
   const key    = 'kinBingo_' + name;
   const stored = sessionStorage.getItem(key);
@@ -715,13 +844,20 @@ function joinPlayer() {
   renderPlayerCard();
   listenAsPlayer();
 }
-function joinCaller() {
+async function joinCaller() {
   const name = getValidName(); if (!name) return;
+  await authReady;
   myName = name; role = 'caller';
+  hostId = 'h_' + Date.now() + '_' + rnd('abcdefghjkmnpqrstuvwxyz0123456789', 6);
   showScreen('caller');
   buildCallerBoard();
+  loadHook();
+  loadInterval();
   listenAsCaller();
+  startTicker();
+  window.addEventListener('beforeunload', () => { if (autoOn) releaseLock(); });
 }
+
 /* ═══════════════════════════════════════════════════════
    PLAYER VIEW
 ═══════════════════════════════════════════════════════ */
@@ -733,7 +869,7 @@ function renderPlayerCard() {
     cell.id = 'pc-' + i;
     if (val === 'FREE') {
       cell.className = 'bingo-cell is-free';
-      cell.textContent = 'FREE';
+      cell.textContent = 'EYE';
     } else {
       cell.className = 'bingo-cell';
       cell.textContent = val;
@@ -745,19 +881,12 @@ function renderPlayerCard() {
 }
 function dabCell(idx) {
   if (myCard[idx] === 'FREE') return;
-  if (myDabbed.has(idx)) {
-    myDabbed.delete(idx);
-    saveDabbed();
-    refreshCardDisplay();
-    return;
-  }
+  if (myDabbed.has(idx)) { myDabbed.delete(idx); saveDabbed(); refreshCardDisplay(); return; }
   myDabbed.add(idx);
   saveDabbed();
   refreshCardDisplay();
   const wins = checkBingoByDabbed(myDabbed);
-  if (wins.length > 0 && !bingoCalled) {
-    $('bingo-btn').disabled = false;
-  }
+  if (wins.length > 0 && !bingoCalled) $('bingo-btn').disabled = false;
 }
 function refreshCardDisplay() {
   const wins    = checkBingoByDabbed(myDabbed);
@@ -767,8 +896,8 @@ function refreshCardDisplay() {
     const isDabbed  = myDabbed.has(i);
     const isWinning = winIdxs.has(i) && isDabbed;
     cell.className = 'bingo-cell';
-    if      (isWinning) cell.classList.add('winning');
-    else if (isDabbed)  { cell.classList.add('dabbed'); cell.textContent = '✕'; }
+    if      (isWinning) { cell.classList.add('winning'); cell.textContent = val; }
+    else if (isDabbed)  { cell.classList.add('dabbed');  cell.textContent = '✕'; }
     else                cell.textContent = val;
   });
   if (!bingoCalled) $('bingo-btn').disabled = wins.length === 0;
@@ -804,11 +933,16 @@ function listenAsPlayer() {
     if (calledNums.length > 0) showBall(calledNums[calledNums.length - 1]);
     refreshChips();
   });
+  db.ref('game/nextDrawAt').on('value', snap => {
+    playerNextAt = snap.val() || 0;
+    if (!playerTick) playerTick = setInterval(renderPlayerCountdown, 1000);
+    renderPlayerCountdown();
+  });
   db.ref('bingoClaims').on('value', snap => {
     const claims = snap.val() || {};
     Object.values(claims).forEach(c => {
       if (c.playerId === myId && c.status === 'confirmed')
-        $('cel-sub').textContent = '✓ CONFIRMED by host!';
+        $('cel-sub').textContent = '✓ Confirmed by the storm center!';
     });
   });
   db.ref('game/gameId').on('value', snap => {
@@ -816,11 +950,17 @@ function listenAsPlayer() {
     calledNums = []; bingoCalled = false;
     myDabbed   = new Set([12]); saveDabbed();
     $('p-ball').className = 'ball empty';
-    $('p-ball-num').textContent = '—'; $('p-ball-letter').textContent = '';
+    $('p-ball-num').textContent = '·'; $('p-ball-letter').textContent = '';
     renderPlayerCard(); refreshChips();
     $('bingo-btn').disabled = true;
     $('celebration').classList.remove('show');
   });
+}
+function renderPlayerCountdown() {
+  const el = $('p-next-call');
+  if (!playerNextAt || playerNextAt < Date.now() - 15000) { el.style.display = 'none'; return; }
+  el.style.display = 'block';
+  $('p-next-time').textContent = mmss(playerNextAt - Date.now());
 }
 function callBingo() {
   const wins = checkBingoByDabbed(myDabbed);
@@ -838,8 +978,9 @@ function callBingo() {
   spawnConfetti();
   setTimeout(() => $('celebration').classList.remove('show'), 5000);
 }
+
 /* ═══════════════════════════════════════════════════════
-   CALLER VIEW
+   HOST: BOARD + STATS
 ═══════════════════════════════════════════════════════ */
 function buildCallerBoard() {
   const board = $('c-board'); board.innerHTML = '';
@@ -871,22 +1012,251 @@ function refreshCallerStats() {
   $('s-remaining').textContent = 75 - cnt;
   $('c-remaining-text').textContent = `${75-cnt} balls remaining`;
 }
+
+/* ── DRAW ────────────────────────────────────────────── */
 function drawNumber() {
   const cs = new Set(calledNums);
   const remaining = [];
   for (let n = 1; n <= 75; n++) if (!cs.has(n)) remaining.push(n);
-  if (!remaining.length) { showToast('All 75 numbers called!', 'error'); return; }
-  const num = remaining[Math.floor(Math.random() * remaining.length)];
+  if (!remaining.length) return null;
+  const num    = remaining[Math.floor(Math.random() * remaining.length)];
   const letter = letterFor(num);
+  // optimistic local update so rapid draws can't repeat a number
+  calledNums.push(num);
   db.ref('game/calledNumbers').push(num);
   db.ref('game/status').set('playing');
   const ball = $('c-draw-ball'); ball.className = 'ball-lg active';
   $('c-draw-num').textContent = num; $('c-draw-letter').textContent = letter;
   ball.style.transform = 'scale(1.2)';
   setTimeout(() => ball.style.transform = 'scale(1)', 300);
+  refreshCallerBoard(); refreshCallerStats();
   if (remaining.length === 1) $('draw-btn').disabled = true;
-  showToast(`Called: ${letter}-${num}`, 'success');
+  return num;
 }
+function manualDraw() {
+  const num = drawNumber();
+  if (num === null) { showToast('All 75 numbers called!', 'error'); return; }
+  showToast(`Called: ${letterFor(num)}-${num}`, 'success');
+  postDrawToSlack(num);
+  if (autoOn) scheduleNext();           // manual call resets the timer
+  if (calledNums.length >= 75 && autoOn) stopAuto('All 75 called.');
+}
+
+/* ── AUTO-DRAW ENGINE ────────────────────────────────── */
+function loadInterval() {
+  const saved = localStorage.getItem(INTERVAL_KEY);
+  if (saved) { $('interval-select').value = saved; }
+  intervalMs = Number($('interval-select').value) || 150000;
+}
+function onIntervalChange() {
+  intervalMs = Number($('interval-select').value) || 150000;
+  localStorage.setItem(INTERVAL_KEY, String(intervalMs));
+  if (autoOn) { scheduleNext(); showToast(`Interval set to ${intervalLabel()}.`, 'success'); }
+}
+function intervalLabel() {
+  const m = intervalMs / 60000;
+  return (m % 1 === 0 ? m : m.toFixed(1)) + ' min';
+}
+function toggleAuto() { autoOn ? stopAuto('Paused by host.') : startAuto(); }
+
+function startAuto() {
+  if (calledNums.length >= 75) { showToast('All 75 numbers already called. Start a new game.', 'error'); return; }
+  // soft lock so two open host tabs can't double the pace
+  db.ref('game/autoHost').once('value', snap => {
+    const lock = snap.val();
+    const fresh = lock && lock.at && (Date.now() - lock.at < 90000) && lock.id !== hostId;
+    if (fresh && !confirm(`"${lock.name}" already has auto-draw running.\n\nStart anyway? Numbers will be called twice as fast.`)) return;
+    autoOn = true;
+    claimLock();
+    hbTimer = setInterval(claimLock, 15000);
+    $('auto-btn').textContent = 'Pause auto-draw';
+    $('auto-btn').classList.add('running');
+    $('auto-status').classList.add('live');
+    $('countdown').style.display = 'block';
+    postStartToSlack();
+    // first call goes out immediately so the channel sees it start
+    const num = drawNumber();
+    if (num !== null) { showToast(`Auto-draw on. Called ${letterFor(num)}-${num}.`, 'success'); postDrawToSlack(num); }
+    scheduleNext();
+    renderAutoStatus();
+  });
+}
+function claimLock() {
+  const ref = db.ref('game/autoHost');
+  ref.set({ id: hostId, name: myName, at: Date.now() });
+  ref.onDisconnect().remove();
+  db.ref('game/nextDrawAt').onDisconnect().remove();
+}
+function releaseLock() {
+  db.ref('game/autoHost').once('value', snap => {
+    const lock = snap.val();
+    if (!lock || lock.id === hostId) { db.ref('game/autoHost').remove(); db.ref('game/nextDrawAt').remove(); }
+  });
+}
+function stopAuto(reason) {
+  autoOn = false;
+  clearTimeout(autoTimer); autoTimer = null;
+  clearInterval(hbTimer);  hbTimer   = null;
+  releaseLock();
+  $('auto-btn').textContent = 'Start auto-draw';
+  $('auto-btn').classList.remove('running');
+  $('auto-status').classList.remove('live');
+  $('countdown').style.display = 'none';
+  $('auto-status-text').textContent = reason || 'Auto-draw is off. You’re calling manually.';
+  if (reason) showToast(reason, 'success');
+}
+function scheduleNext() {
+  clearTimeout(autoTimer);
+  nextDrawAt = Date.now() + intervalMs;
+  db.ref('game/nextDrawAt').set(nextDrawAt);
+  autoTimer = setTimeout(fireDraw, intervalMs);
+  renderAutoStatus();
+}
+function fireDraw() {
+  if (!autoOn || firing) return;
+  firing = true;
+  try {
+    const num = drawNumber();
+    if (num === null) { stopAuto('All 75 numbers called. The storm has passed.'); postAllCalledToSlack(); return; }
+    postDrawToSlack(num);
+    if (calledNums.length >= 75) { stopAuto('All 75 numbers called. The storm has passed.'); postAllCalledToSlack(); return; }
+    scheduleNext();
+  } finally { firing = false; }
+}
+/* One ticker drives the countdown AND catches up if the browser
+   throttled our timer while the tab was in the background. */
+function startTicker() {
+  if (tickTimer) return;
+  tickTimer = setInterval(() => {
+    if (!autoOn) return;
+    if (Date.now() >= nextDrawAt) fireDraw();
+    renderAutoStatus();
+  }, 1000);
+}
+function renderAutoStatus() {
+  if (!autoOn) return;
+  $('auto-status-text').textContent = `Auto-draw live, calling every ${intervalLabel()}`;
+  $('countdown').textContent = 'Next call in ' + mmss(nextDrawAt - Date.now());
+}
+
+/* ═══════════════════════════════════════════════════════
+   SLACK
+═══════════════════════════════════════════════════════ */
+function getHook() { return (localStorage.getItem(HOOK_KEY) || '').trim(); }
+function loadHook() {
+  const h = getHook();
+  if (h) { $('hook-input').value = h; setHookState('on', 'Webhook saved. Calls will post to Slack.'); }
+  else   { setHookState('off', 'No webhook saved, so nothing will post to Slack.'); }
+}
+function setHookState(cls, msg) {
+  const el = $('hook-state');
+  el.className = 'hook-state ' + cls;
+  el.textContent = msg;
+}
+function toggleHookVisible() {
+  const i = $('hook-input');
+  const showing = i.type === 'text';
+  i.type = showing ? 'password' : 'text';
+  $('hook-eye').textContent = showing ? 'Show' : 'Hide';
+}
+function saveHook() {
+  const v = $('hook-input').value.trim();
+  if (!v) { setHookState('err', 'Paste a webhook URL first.'); return; }
+  if (!/^https:\/\/hooks\.slack\.com\/services\//.test(v)) {
+    setHookState('err', 'That doesn’t look like a Slack webhook (should start https://hooks.slack.com/services/).');
+    return;
+  }
+  localStorage.setItem(HOOK_KEY, v);
+  setHookState('on', 'Webhook saved. Calls will post to Slack.');
+  showToast('Slack webhook saved to this browser.', 'success');
+}
+function clearHook() {
+  localStorage.removeItem(HOOK_KEY);
+  $('hook-input').value = '';
+  setHookState('off', 'Webhook forgotten. Nothing will post to Slack.');
+}
+/* Sent as form-encoded so the browser makes a simple request
+   (no CORS preflight). Falls back to an opaque no-cors send. */
+async function slackPost(text) {
+  const url = getHook();
+  if (!url) return { skipped: true };
+  const body = 'payload=' + encodeURIComponent(JSON.stringify({ text, mrkdwn: true }));
+  const opts = { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' }, body };
+  try {
+    const r = await fetch(url, opts);
+    return { ok: r.ok, status: r.status };
+  } catch (e) {
+    try { await fetch(url, { ...opts, mode: 'no-cors' }); return { ok: true, opaque: true }; }
+    catch (e2) { return { ok: false, error: String(e2) }; }
+  }
+}
+function boardLines() {
+  const groups = { B:[], I:[], N:[], G:[], O:[] };
+  calledNums.forEach(n => groups[letterFor(n)].push(n));
+  return Object.entries(groups)
+    .filter(([,nums]) => nums.length > 0)
+    .map(([letter, nums]) => `*${letter}:* ${nums.slice().sort((a,b)=>a-b).join(', ')}`);
+}
+async function postDrawToSlack(num) {
+  if (!getHook()) return;
+  const count = calledNums.length;
+  const lines = [
+    `🌀 *${letterFor(num)}-${num}*`,
+    `_Call ${count} of 75 · ${75-count} balls still swirling_`
+  ];
+  if (count % BOARD_EVERY === 0) {
+    lines.push('', '*Called so far:*', ...boardLines());
+  }
+  const r = await slackPost(lines.join('\n'));
+  if (r && r.ok === false) setHookState('err', 'Slack post failed. Check the webhook URL.');
+}
+async function postStartToSlack() {
+  if (!getHook()) return;
+  await slackPost([
+    `⚠️ *KIN BINGO: HURRICANE SEASON IS LIVE* 🌀`,
+    `A new number drops every *${intervalLabel()}*. No host needed, the storm calls itself.`,
+    `Grab a card: ${GAME_URL}`
+  ].join('\n'));
+}
+async function postAllCalledToSlack() {
+  if (!getHook()) return;
+  await slackPost([`🌤️ *All 75 numbers called. The storm has passed.*`, '', '*Final board:*', ...boardLines()].join('\n'));
+}
+async function postWinnerToSlack(claim) {
+  if (!getHook()) return;
+  await slackPost([
+    `🎉 *BINGO CONFIRMED: ${claim.playerName}!* 🌀`,
+    `_Card #${claim.cardNum || '?'} · ${(claim.patterns||[]).join(', ')} · on call ${calledNums.length}_`
+  ].join('\n'));
+}
+async function testHook() {
+  const v = $('hook-input').value.trim();
+  if (v && v !== getHook()) saveHook();
+  if (!getHook()) { setHookState('err', 'Save a webhook URL first.'); return; }
+  setHookState('off', 'Sending test…');
+  const r = await slackPost('🌀 *Test call from Kin Bingo storm center*. If you can read this, auto-posting is wired up.');
+  if (r.skipped)     setHookState('err', 'No webhook saved.');
+  else if (r.ok && r.opaque) setHookState('on', 'Test sent (response hidden by the browser). Check the channel.');
+  else if (r.ok)     setHookState('on', 'Test posted successfully. You’re good to go.');
+  else               setHookState('err', 'Slack rejected that webhook. Double-check the URL.');
+}
+/* Manual fallback: copies the board to paste into Slack yourself */
+function copyForSlack() {
+  if (!calledNums.length) { showToast('Nothing called yet.', 'error'); return; }
+  const last = calledNums[calledNums.length-1];
+  const text = [
+    `🌀 *KIN BINGO: Called numbers (${calledNums.length}/75)*`, '',
+    ...boardLines(), '',
+    `_Last called: *${letterFor(last)}-${last}*_`
+  ].join('\n');
+  navigator.clipboard.writeText(text)
+    .then(() => showToast('Board copied. Paste into Slack.', 'success'))
+    .catch(() => showToast('Copy failed, try again.', 'error'));
+}
+
+/* ═══════════════════════════════════════════════════════
+   HOST LISTENERS
+═══════════════════════════════════════════════════════ */
 function listenAsCaller() {
   db.ref('players').on('value', snap => {
     const players = snap.val() || {};
@@ -903,22 +1273,21 @@ function listenAsCaller() {
       const n = calledNums[calledNums.length-1];
       $('c-draw-ball').className = 'ball-lg active';
       $('c-draw-num').textContent = n; $('c-draw-letter').textContent = letterFor(n);
-      $('copy-slack-btn').style.display = 'inline-block';
     }
   });
   db.ref('bingoClaims').on('value', snap => {
     const data   = snap.val() || {};
-    const claims = Object.entries(data).map(([id,v])=>({id,...v})).sort((a,b)=>b.timestamp-a.timestamp);
-    $('s-claims').textContent = claims.filter(c=>c.status==='pending').length;
+    const claims = Object.entries(data).map(([id,v]) => ({ id, ...v })).sort((a,b) => b.timestamp - a.timestamp);
+    $('s-claims').textContent = claims.filter(c => c.status === 'pending').length;
     renderClaims(claims);
   });
 }
 function renderPlayerList(players) {
   const el = $('c-players-list');
-  if (!players.length) { el.innerHTML = '<div class="empty-state">No players yet — share the link!</div>'; return; }
+  if (!players.length) { el.innerHTML = '<div class="empty-state">No players yet. Share the link!</div>'; return; }
   el.innerHTML = players.map(p => `
     <div class="player-row">
-      <div><div class="player-row-name">${p.name}</div><div class="player-row-card">Card #${p.cardNum||'------'}</div></div>
+      <div><div class="player-row-name">${esc(p.name)}</div><div class="player-row-card">Card #${esc(p.cardNum||'······')}</div></div>
       <span class="badge-live">LIVE</span>
     </div>`).join('');
 }
@@ -927,17 +1296,18 @@ function renderClaims(claims) {
   if (!claims.length) { el.innerHTML = '<div class="empty-state">No claims yet.</div>'; return; }
   el.innerHTML = claims.map(c => {
     const actions = c.status === 'pending'
-      ? `<button class="btn btn-spring btn-sm" onclick="openVerify('${c.id}')">VERIFY</button>`
-      : `<span class="claim-badge ${c.status}">${c.status.toUpperCase()}</span>`;
+      ? `<button class="btn btn-storm btn-sm" onclick="openVerify('${esc(c.id)}')">Verify</button>`
+      : `<span class="claim-badge ${esc(c.status)}">${esc(c.status).toUpperCase()}</span>`;
     return `<div class="claim-row">
       <div class="claim-head">
-        <div><div class="claim-name">${c.playerName}</div><div class="claim-time">Card #${c.cardNum||'?'} · ${timeAgo(c.timestamp)}</div></div>
+        <div><div class="claim-name">${esc(c.playerName)}</div><div class="claim-time">Card #${esc(c.cardNum||'?')} · ${timeAgo(c.timestamp)}</div></div>
         ${actions}
       </div>
-      <div class="claim-patterns">Claims: ${(c.patterns||[]).join(', ')}</div>
+      <div class="claim-patterns">Claims: ${esc((c.patterns||[]).join(', '))}</div>
     </div>`;
   }).join('');
 }
+
 /* ── Verify modal ────────────────────────────────────── */
 function openVerify(claimId) {
   db.ref('bingoClaims/' + claimId).once('value', snap => {
@@ -950,22 +1320,18 @@ function openVerify(claimId) {
     const isValid    = wins.length > 0;
     const dabbedIdxs = new Set(claim.dabbed || []);
     $('m-result').innerHTML = `<div class="verify-result ${isValid?'valid':'invalid'}">
-      ${isValid ? '✓ VALID BINGO — ' + wins.map(w=>w.name).join(', ')
-                : '✗ INVALID — card has uncalled numbers marked'}
+      ${isValid ? '✓ Valid bingo: ' + esc(wins.map(w=>w.name).join(', '))
+                : '✗ Invalid. Card has uncalled numbers marked'}
     </div>`;
     $('m-patterns').textContent = `Player claimed: ${(claim.patterns||[]).join(', ')}`;
     const grid = $('m-card'); grid.innerHTML = '';
     claim.card.forEach((val, i) => {
       const cell = document.createElement('div'); cell.className = 'mini-cell';
-      if (val === 'FREE') {
-        cell.classList.add('free'); cell.textContent = 'FREE';
-      } else if (dabbedIdxs.has(i)) {
-        const numCalled = calledSet.has(val);
-        cell.classList.add(numCalled ? 'valid-dab' : 'invalid-dab');
-        cell.textContent = numCalled ? val : val;
-      } else {
+      if (val === 'FREE') { cell.classList.add('free'); cell.textContent = 'EYE'; }
+      else if (dabbedIdxs.has(i)) {
+        cell.classList.add(calledSet.has(val) ? 'valid-dab' : 'invalid-dab');
         cell.textContent = val;
-      }
+      } else cell.textContent = val;
       grid.appendChild(cell);
     });
     $('verify-modal').classList.remove('hidden');
@@ -973,26 +1339,36 @@ function openVerify(claimId) {
 }
 function confirmBingo(isValid) {
   if (!verifyClaim) return;
-  db.ref('bingoClaims/' + verifyClaim.id + '/status').set(isValid ? 'confirmed' : 'rejected');
-  showToast(isValid ? `BINGO confirmed for ${verifyClaim.playerName}!` : 'Bingo rejected.', isValid ? 'success' : 'error');
+  const claim = verifyClaim;
+  db.ref('bingoClaims/' + claim.id + '/status').set(isValid ? 'confirmed' : 'rejected');
+  if (isValid && !announcedWin.has(claim.id)) { announcedWin.add(claim.id); postWinnerToSlack(claim); }
+  showToast(isValid ? `Bingo confirmed for ${claim.playerName}!` : 'Bingo rejected.', isValid ? 'success' : 'error');
   closeModal();
 }
 function closeModal() { $('verify-modal').classList.add('hidden'); verifyClaim = null; }
+
 function resetGame() {
   if (!confirm('Start a new game? This clears all called numbers and claims.\nPlayers will need to refresh for a new card.')) return;
-  db.ref('game').set({ status: 'waiting', calledNumbers: null, gameId: Date.now() });
-  db.ref('bingoClaims').remove(); db.ref('players').remove();
-  calledNums = []; refreshCallerBoard(); refreshCallerStats();
+  if (autoOn) stopAuto('Auto-draw stopped for the new game.');
+  db.ref('game/calledNumbers').remove();
+  db.ref('game/nextDrawAt').remove();
+  db.ref('game/status').set('waiting');
+  db.ref('bingoClaims').remove();
+  db.ref('players').remove();
+  db.ref('game/gameId').set(Date.now());   // last: this is what resets players
+  calledNums = []; announcedWin = new Set();
+  refreshCallerBoard(); refreshCallerStats();
   $('c-draw-ball').className = 'ball-lg idle';
-  $('c-draw-num').textContent = '?'; $('c-draw-letter').textContent = '—';
+  $('c-draw-num').textContent = '?'; $('c-draw-letter').textContent = '·';
   $('draw-btn').disabled = false;
   $('s-players').textContent = '0'; $('c-player-count').textContent = '0';
   showToast('New game started! Ask players to refresh.', 'success');
 }
+
 /* ── Confetti ────────────────────────────────────────── */
 function spawnConfetti() {
   const wrap = $('confetti');
-  const colors = ['#FF6B35','#EA580C','#0EA5E9','#FDE047','#84CC16','#F97316','#67E8F9'];
+  const colors = ['#ffc857','#ffd48a','#266dd9','#5883dd','#b6c4ed','#ffffff','#184589'];
   wrap.innerHTML = '';
   for (let i = 0; i < 70; i++) {
     const p = document.createElement('div'); p.className = 'confetti-piece';
@@ -1004,31 +1380,6 @@ function spawnConfetti() {
     wrap.appendChild(p);
   }
   setTimeout(() => wrap.innerHTML = '', 6000);
-}
-/* ── Copy for Slack ──────────────────────────────────── */
-function copyForSlack() {
-  if (!calledNums.length) return;
-  const groups = { B:[], I:[], N:[], G:[], O:[] };
-  calledNums.forEach(n => groups[letterFor(n)].push(n));
-  const lines = Object.entries(groups)
-    .filter(([,nums]) => nums.length > 0)
-    .map(([letter, nums]) => `*${letter}:* ${nums.sort((a,b)=>a-b).join(', ')}`);
-  const text = [
-    `☀️ *KIN BINGO — Called Numbers (${calledNums.length}/75)*`,
-    '',
-    ...lines,
-    '',
-    `_Last called: *${letterFor(calledNums[calledNums.length-1])}-${calledNums[calledNums.length-1]}*_`
-  ].join('\n');
-  navigator.clipboard.writeText(text).then(() => {
-    const btn = $('copy-slack-btn');
-    btn.textContent = '✓ Copied! Paste into Slack';
-    btn.classList.add('copied');
-    setTimeout(() => {
-      btn.textContent = '📋 Copy Called Numbers for Slack';
-      btn.classList.remove('copied');
-    }, 2500);
-  }).catch(() => showToast('Copy failed — try again', 'error'));
 }
 function showToast(msg, type='') {
   const t = $('toast'); t.textContent = msg;
